@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Ventas BUN — DIST & WHOLESALE</title>
+<style>
+  :root {
+    --bg: #f5f2ec;
+    --card: #ffffff;
+    --border: #e5e0d5;
+    --text-primary: #1a1814;
+    --text-secondary: #6b6560;
+    --text-muted: #9b9590;
+    --accent-dist: #2d6a4f;
+    --accent-ws: #7b3f6e;
+    --accent-margin: #c77d3a;
+    --accent-neg: #b83232;
+    --tag-dn: #1e4d8c;
+    --tag-di: #6b3fa0;
+    --tag-salon: #2e7d52;
+    --tag-ws: #7b3f6e;
+    --tag-otro: #d97706;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .header-logo {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #2d6a4f, #7b3f6e);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 14px;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-sub { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+  .tabs-bar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+  }
+  .tab-btn {
+    padding: 14px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    position: relative;
+    top: 1px;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active-dist { color: var(--accent-dist); border-bottom-color: var(--accent-dist); }
+  .tab-btn.active-ws { color: var(--accent-ws); border-bottom-color: var(--accent-ws); }
+  .main { padding: 24px; max-width: 1280px; margin: 0 auto; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .filters {
+    display: flex; gap: 10px; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .filter-group { display: flex; align-items: center; gap: 6px; }
+  .filter-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6560'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+    outline: none;
+  }
+  select:focus { border-color: #999; }
+  .toggle-group {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .toggle-btn {
+    padding: 6px 14px;
+    background: var(--card);
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .toggle-btn.active { background: var(--text-primary); color: white; }
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    border-left: 4px solid transparent;
+    box-shadow: var(--shadow);
+  }
+  .kpi-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px;
+  }
+  .kpi-value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.1; }
+  .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .kpi-venta { border-left-color: var(--accent-dist); }
+  .kpi-venta .kpi-value { color: var(--accent-dist); }
+  .kpi-venta.ws { border-left-color: var(--accent-ws); }
+  .kpi-venta.ws .kpi-value { color: var(--accent-ws); }
+  .kpi-cogs { border-left-color: #c0a060; }
+  .kpi-cogs .kpi-value { color: #8a6a30; }
+  .kpi-margen { border-left-color: var(--accent-margin); }
+  .kpi-margen .kpi-value { color: var(--accent-margin); }
+  .kpi-margen.negative { border-left-color: var(--accent-neg); }
+  .kpi-margen.negative .kpi-value { color: var(--accent-neg); }
+  .kpi-pct { border-left-color: #5b8cd6; }
+  .kpi-pct .kpi-value { color: #2a5ab0; }
+  .kpi-pct.negative { border-left-color: var(--accent-neg); }
+  .kpi-pct.negative .kpi-value { color: var(--accent-neg); }
+  .charts-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 13px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  canvas { display: block; width: 100% !important; }
+  .chart-wrap { position: relative; width: 100%; }
+  .tables-row {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 16px;
+  }
+  .table-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+  }
+  .table-filters { display: flex; gap: 8px; align-items: center; }
+  .search-input {
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 12px; outline: none; width: 160px; background: var(--bg);
+  }
+  .search-input:focus { border-color: #999; background: white; }
+  select.mini { padding: 5px 8px; font-size: 12px; padding-right: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead th {
+    text-align: left; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); padding: 0 8px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th.right { text-align: right; }
+  tbody tr { transition: background 0.1s; }
+  tbody tr:hover { background: #faf8f4; }
+  tbody td { padding: 9px 8px; border-bottom: 1px solid var(--border); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.right { text-align: right; font-variant-numeric: tabular-nums; }
+  td.pct { color: var(--text-secondary); }
+  .canal-tag {
+    display: inline-block; padding: 2px 7px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.3px; color: white;
+  }
+  .tag-dn { background: var(--tag-dn); }
+  .tag-di { background: var(--tag-di); }
+  .tag-salon { background: var(--tag-salon); }
+  .tag-ws { background: var(--tag-ws); }
+  .tag-otro { background: var(--tag-otro); }
+  .show-more-btn {
+    display: block; width: 100%; padding: 8px; margin-top: 8px;
+    background: none; border: 1px dashed var(--border);
+    border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 12px; color: var(--text-secondary); transition: all 0.15s;
+  }
+  .show-more-btn:hover { background: var(--bg); color: var(--text-primary); }
+  .marca-row { display: flex; align-items: center; gap: 8px; }
+  .marca-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .chart-legend {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  @media (max-width: 900px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+    .tables-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">BV</div>
+  <span class="header-title">Dashboard Ventas BUN</span>
+  <span class="header-sub">Datos: Ejercicio 2026 · Actualizado 18/06/2026</span>
+</header>
+
+<div class="tabs-bar">
+  <button class="tab-btn active-dist" id="tab-dist" onclick="switchTab('DIST')">BUN DIST</button>
+  <button class="tab-btn" id="tab-ws" onclick="switchTab('WHOLESALE')">BUN WHOLESALE</button>
+</div>
+
+<div class="main">
+  <!-- DIST TAB -->
+  <div class="tab-content active" id="content-DIST">
+    <div class="filters">
+      <div class="filter-group">
+        <span class="filter-label">Año</span>
+        <select id="dist-year" onchange="updateDIST()"><option value="2026">2026</option></select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Mes</span>
+        <select id="dist-month" onchange="updateDIST()">
+          <option value="0">Todos</option>
+          <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+          <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="dist-mode-mensual" onclick="setDistMode('mensual')">Mensual</button>
+          <button class="toggle-btn" id="dist-mode-acumulado" onclick="setDistMode('acumulado')">Acumulado</button>
+        </div>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi-card kpi-venta">
+        <div class="kpi-label">Venta</div>
+        <div class="kpi-value" id="dist-kpi-venta">—</div>
+        <div class="kpi-sub">Venta de producto (cuenta 7000000)</div>
+      </div>
+      <div class="kpi-card kpi-cogs">
+        <div class="kpi-label">Coste (COGS)</div>
+        <div class="kpi-value" id="dist-kpi-cogs">—</div>
+        <div class="kpi-sub">Compras netas (6000000, 6100000)</div>
+      </div>
+      <div class="kpi-card kpi-margen" id="dist-kpi-margen-card">
+        <div class="kpi-label">Margen Bruto</div>
+        <div class="kpi-value" id="dist-kpi-margen">—</div>
+        <div class="kpi-sub">Venta − COGS</div>
+      </div>
+      <div class="kpi-card kpi-pct" id="dist-kpi-pct-card">
+        <div class="kpi-label">% Margen</div>
+        <div class="kpi-value" id="dist-kpi-pct">—</div>
+        <div class="kpi-sub">Margen / Venta</div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-title">Evolución Mensual</div>
+        <div class="chart-wrap"><canvas id="dist-chart-evolution"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#2d6a4f"></div>Venta</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c0a060"></div>Coste</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c77d3a;border-radius:50%"></div>Margen</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Venta por Marca</div>
+        <div class="chart-wrap"><canvas id="dist-chart-brands"></canvas></div>
+      </div>
+    </div>
+    <div class="tables-row">
+      <div class="card">
+        <div class="table-header">
+          <div class="card-title" style="margin-bottom:0">Clientes</div>
+          <div class="table-filters">
+            <select class="mini" id="dist-canal-filter" onchange="renderDistClientes()">
+              <option value="">Todos los canales</option>
+              <option value="DN">DN — Distribuidor Nacional</option>
+              <option value="DI">DI — Distribuidor Internacional</option>
+              <option value="Salón">Salón</option>
+              <option value="Otro">Otro</option>
+            </select>
+            <input class="search-input" id="dist-search" placeholder="Buscar cliente…" oninput="renderDistClientes()">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Cliente</th><th>Canal</th><th class="right">Venta (€)</th><th class="right">% Total</th></tr></thead>
+          <tbody id="dist-clientes-body"></tbody>
+        </table>
+        <button class="show-more-btn" id="dist-show-more" onclick="toggleDistMore()">Ver todos ▾</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Marcas</div>
+        <table>
+          <thead><tr><th>Marca</th><th class="right">Venta (€)</th><th class="right">% Total</th></tr></thead>
+          <tbody id="dist-marcas-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHOLESALE TAB -->
+  <div class="tab-content" id="content-WHOLESALE">
+    <div class="filters">
+      <div class="filter-group">
+        <span class="filter-label">Año</span>
+        <select id="ws-year" onchange="updateWS()"><option value="2026">2026</option></select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Mes</span>
+        <select id="ws-month" onchange="updateWS()">
+          <option value="0">Todos</option>
+          <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+          <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="ws-mode-mensual" onclick="setWSMode('mensual')">Mensual</button>
+          <button class="toggle-btn" id="ws-mode-acumulado" onclick="setWSMode('acumulado')">Acumulado</button>
+        </div>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi-card kpi-venta ws">
+        <div class="kpi-label">Venta</div>
+        <div class="kpi-value" id="ws-kpi-venta">—</div>
+        <div class="kpi-sub">Todas las cuentas 7xxxxxx</div>
+      </div>
+      <div class="kpi-card kpi-cogs">
+        <div class="kpi-label">Coste (COGS)</div>
+        <div class="kpi-value" id="ws-kpi-cogs">—</div>
+        <div class="kpi-sub">Compras netas (6000000, 6090000, 6100000)</div>
+      </div>
+      <div class="kpi-card kpi-margen" id="ws-kpi-margen-card">
+        <div class="kpi-label">Margen Bruto</div>
+        <div class="kpi-value" id="ws-kpi-margen">—</div>
+        <div class="kpi-sub">Venta − COGS</div>
+      </div>
+      <div class="kpi-card kpi-pct" id="ws-kpi-pct-card">
+        <div class="kpi-label">% Margen</div>
+        <div class="kpi-value" id="ws-kpi-pct">—</div>
+        <div class="kpi-sub">Margen / Venta</div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-title">Evolución Mensual</div>
+        <div class="chart-wrap"><canvas id="ws-chart-evolution"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#7b3f6e"></div>Venta</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c0a060"></div>Coste</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c77d3a;border-radius:50%"></div>Margen</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Venta por Marca</div>
+        <div class="chart-wrap"><canvas id="ws-chart-brands"></canvas></div>
+      </div>
+    </div>
+    <div class="tables-row">
+      <div class="card">
+        <div class="table-header">
+          <div class="card-title" style="margin-bottom:0">Clientes</div>
+          <div class="table-filters">
+            <input class="search-input" id="ws-search" placeholder="Buscar cliente…" oninput="renderWSClientes()">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Cliente</th><th>Canal</th><th class="right">Venta (€)</th><th class="right">% Total</th></tr></thead>
+          <tbody id="ws-clientes-body"></tbody>
+        </table>
+        <button class="show-more-btn" id="ws-show-more" onclick="toggleWSMore()">Ver todos ▾</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Marcas</div>
+        <table>
+          <thead><tr><th>Marca</th><th class="right">Venta (€)</th><th class="right">% Total</th></tr></thead>
+          <tbody id="ws-marcas-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RAW = {"DIST": {"monthly": [{"mes": 1, "venta": 173078.85, "cogs": 138012.79, "margen": 35066.06}, {"mes": 2, "venta": 207150.1, "cogs": 151538.04, "margen": 55612.06}, {"mes": 3, "venta": 101420.41, "cogs": 67312.58, "margen": 34107.83}, {"mes": 4, "venta": 93740.64, "cogs": 65386.98, "margen": 28353.66}, {"mes": 5, "venta": 117279.22, "cogs": 82092.04, "margen": 35187.18}, {"mes": 6, "venta": 150350.56, "cogs": -13897.27, "margen": 164247.83}, {"mes": 7, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 8, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 9, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 10, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 11, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 12, "venta": 0.0, "cogs": 0.0, "margen": 0.0}], "clientes": [{"cliente": "DB COSMETIC UNIPESSOAL LDA", "canal": "DN", "venta": 143363.9, "pct": 16.2}, {"cliente": "SHAZAM HAIR & COSMETIC, S.L.", "canal": "DN", "venta": 136766.34, "pct": 15.4}, {"cliente": "SERVICIO INTEGRAL DE PELUQUERIAS, G", "canal": "DN", "venta": 64243.79, "pct": 7.3}, {"cliente": "GME SERVICIO INTEGRAL DE PELUQUERIA", "canal": "DN", "venta": 47733.18, "pct": 5.4}, {"cliente": "VILLALBA AL ALBA, S.L.U.", "canal": "DN", "venta": 46985.54, "pct": 5.3}, {"cliente": "ADELA CAICOYA SL", "canal": "DN", "venta": 35528.0, "pct": 4.0}, {"cliente": "HAIR LOOK SL", "canal": "DN", "venta": 33095.6, "pct": 3.7}, {"cliente": "LUXUS TRADE OU", "canal": "DI", "venta": 27648.43, "pct": 3.1}, {"cliente": "BELLA AURORA LABS, S.A.,", "canal": "DN", "venta": 19062.7, "pct": 2.2}, {"cliente": "IO  PROMO, S.L", "canal": "DN", "venta": 18382.0, "pct": 2.1}, {"cliente": "CHIC LOVE FASHION BRAND SL", "canal": "DN", "venta": 16403.57, "pct": 1.9}, {"cliente": "CHIC LOVE FASHION BRAND SL", "canal": "Salón", "venta": 15114.18, "pct": 1.7}, {"cliente": "DISTRIBUCIONES COSMOLAN, S.L.", "canal": "DN", "venta": 15105.54, "pct": 1.7}, {"cliente": "LUXURY ORGANIC S.L.", "canal": "DN", "venta": 14314.3, "pct": 1.6}, {"cliente": "OVEN GLOBE, S.L.", "canal": "DN", "venta": 13385.29, "pct": 1.5}, {"cliente": "HAIR DAY SL", "canal": "Salón", "venta": 12924.88, "pct": 1.5}, {"cliente": "SESABE PROFESSIONAL S.L.", "canal": "DN", "venta": 12546.15, "pct": 1.4}, {"cliente": "COSBEL SL", "canal": "DN", "venta": 10584.3, "pct": 1.2}, {"cliente": "BRITO COSMETICS, S.L.", "canal": "DN", "venta": 10471.2, "pct": 1.2}, {"cliente": "DISCANARY COSMÉTICA Y BELLEZA, S.L", "canal": "DN", "venta": 9926.56, "pct": 1.1}, {"cliente": "CENTRAL LAB LLEIDA SLU", "canal": "DN", "venta": 9038.4, "pct": 1.0}, {"cliente": "JESSY ART ZONE, S.L.", "canal": "DN", "venta": 8614.93, "pct": 1.0}, {"cliente": "ITALBEAUTY, S.L.", "canal": "DN", "venta": 7572.81, "pct": 0.9}, {"cliente": "PH STYLE SRO", "canal": "DN", "venta": 7187.0, "pct": 0.8}, {"cliente": "LOOKGE CORP, S.L.", "canal": "DN", "venta": 6464.91, "pct": 0.7}, {"cliente": "VITAL LOOK, S.L.", "canal": "DN", "venta": 5963.1, "pct": 0.7}, {"cliente": "ALÍNEA PRINCIPAL UNIPESSOAL LDA.", "canal": "DN", "venta": 5534.1, "pct": 0.6}, {"cliente": "SERVEC 94, S.L.", "canal": "DN", "venta": 5412.82, "pct": 0.6}, {"cliente": "PLUINCA, S.L.", "canal": "DN", "venta": 4812.0, "pct": 0.5}, {"cliente": "CSP LOGISTICS", "canal": "DN", "venta": 4599.0, "pct": 0.5}, {"cliente": "ORGANIMAX BUSINESS SL", "canal": "DN", "venta": 4419.51, "pct": 0.5}, {"cliente": "CASALS DISPRO S.L.", "canal": "DN", "venta": 4387.8, "pct": 0.5}, {"cliente": "PROFESSIONAL CARE ELITE 2023, S.L.", "canal": "DN", "venta": 4175.2, "pct": 0.5}, {"cliente": "CENTRAL LAB LLEIDA SLU", "canal": "Salón", "venta": 4077.6, "pct": 0.5}, {"cliente": "MOLECULE ESHOP", "canal": "DN", "venta": 4020.0, "pct": 0.5}, {"cliente": "MOLECULE ESHOP", "canal": "DI", "venta": 3125.5, "pct": 0.4}, {"cliente": "FEDERACIÓ FARMACÈUTICA S.COOP.C.L.", "canal": "Salón", "venta": 2974.77, "pct": 0.3}, {"cliente": "DISTRIBUCIONES L Y MANGADO SL", "canal": "DN", "venta": 2947.2, "pct": 0.3}, {"cliente": "ALICIA RAMIREZ HAIR SALON", "canal": "Salón", "venta": 2764.57, "pct": 0.3}, {"cliente": "JAVIER EQUIP S.L", "canal": "DN", "venta": 2744.25, "pct": 0.3}, {"cliente": "COMERCIAL RENOIR SL", "canal": "DN", "venta": 2722.07, "pct": 0.3}, {"cliente": "THAIS FONOLLOSA MARTIN", "canal": "Salón", "venta": 2648.0, "pct": 0.3}, {"cliente": "ANA SANCHEZ PALOMEQUE", "canal": "Salón", "venta": 2612.93, "pct": 0.3}, {"cliente": "SEVEL PROFESIONAL S.L.", "canal": "DN", "venta": 2577.6, "pct": 0.3}, {"cliente": "COMERCIAL AISAN 3, S.L.", "canal": "DN", "venta": 1963.9, "pct": 0.2}, {"cliente": "LISOS Y ONDAS, S.L.", "canal": "Salón", "venta": 1932.0, "pct": 0.2}, {"cliente": "ENEXO HAIR SATATE", "canal": "Salón", "venta": 1927.18, "pct": 0.2}, {"cliente": "SOLEDAD REBOLLAR", "canal": "Salón", "venta": 1901.87, "pct": 0.2}, {"cliente": "ELICES SALVADOR S.C", "canal": "Salón", "venta": 1877.04, "pct": 0.2}, {"cliente": "HAIR & GWOW BY PELUQUERIAGLORIAA SL", "canal": "Salón", "venta": 1877.04, "pct": 0.2}, {"cliente": "EVA NAVARRO ESTILISTAS", "canal": "Salón", "venta": 1877.04, "pct": 0.2}, {"cliente": "SARA ALCAHUZ SANCHEZ", "canal": "DN", "venta": 1868.95, "pct": 0.2}, {"cliente": "FRANCISCA MELGUIZO SL", "canal": "DN", "venta": 1868.95, "pct": 0.2}, {"cliente": "TANIA SANCHEZ ALBARRAN", "canal": "DN", "venta": 1868.95, "pct": 0.2}, {"cliente": "VANESSA BERMUDEZ MOLINA", "canal": "DN", "venta": 1850.0, "pct": 0.2}, {"cliente": "MONICA BUENO ROBLES", "canal": "DN", "venta": 1850.0, "pct": 0.2}, {"cliente": "MICRONHAIR, S.L.", "canal": "DN", "venta": 1850.0, "pct": 0.2}, {"cliente": "ADRIANA KARINA RODRIGUEZ OROZCO", "canal": "DN", "venta": 1850.0, "pct": 0.2}, {"cliente": "BEAUTYGE S.L.", "canal": "DN", "venta": 1815.91, "pct": 0.2}, {"cliente": "LETICIA COMA BARBA", "canal": "DN", "venta": 1787.06, "pct": 0.2}, {"cliente": "CHIC LOVE FASHION BRAND SL", "canal": "Otro", "venta": 1721.93, "pct": 0.2}, {"cliente": "CULT OF HAIR SLU", "canal": "DN", "venta": 1582.2, "pct": 0.2}, {"cliente": "MIMA TU CABELLO BY LARA FERNANDEZ S", "canal": "Salón", "venta": 1567.2, "pct": 0.2}, {"cliente": "FLORENTINO ARTICULOS DE PELUQUERIA,", "canal": "Salón", "venta": 1545.6, "pct": 0.2}, {"cliente": "OLIVER Y GORETTI SL", "canal": "Salón", "venta": 1424.64, "pct": 0.2}, {"cliente": "LORENA ESTILISTA HAIR STUDIO SL", "canal": "Salón", "venta": 1223.7, "pct": 0.1}, {"cliente": "DESIGN PROFESSIONEL A.M.B.A.", "canal": "DN", "venta": 1200.0, "pct": 0.1}, {"cliente": "SUBLIME BEAUTY WHOLESALER SL", "canal": "DN", "venta": 1114.44, "pct": 0.1}, {"cliente": "ATELIER VITORIA S.L.", "canal": "Salón", "venta": 1037.22, "pct": 0.1}, {"cliente": "M&S HAIR EVOLUTION, S.L.", "canal": "DN", "venta": 1000.0, "pct": 0.1}, {"cliente": "ANTONIO BASCUсNA SANCHEZ", "canal": "Salón", "venta": 973.83, "pct": 0.1}, {"cliente": "NURIA SALAZAR RUIZ", "canal": "Salón", "venta": 945.76, "pct": 0.1}, {"cliente": "PELUQUERIA CACHE VALLISOLETANA SLU", "canal": "Salón", "venta": 850.23, "pct": 0.1}, {"cliente": "SKIN HAIR CARE S.L.", "canal": "DN", "venta": 828.0, "pct": 0.1}, {"cliente": "MARISOL BELLIDO S.L.U", "canal": "Salón", "venta": 822.06, "pct": 0.1}, {"cliente": "MARIA DEL MAR ADAN MARTINEZ", "canal": "Salón", "venta": 821.6, "pct": 0.1}, {"cliente": "LAILA REJANE DOS REIS FLAUSINO", "canal": "DN", "venta": 806.21, "pct": 0.1}, {"cliente": "HANANE EL HAOUARI", "canal": "Salón", "venta": 749.98, "pct": 0.1}, {"cliente": "NURIA SANCHEZ CARMONA", "canal": "DN", "venta": 677.71, "pct": 0.1}, {"cliente": "LE MIROIR DE DESI, S.L.", "canal": "DN", "venta": 668.61, "pct": 0.1}, {"cliente": "ALICIA RAMIREZ HAIR SALON", "canal": "DN", "venta": 602.57, "pct": 0.1}, {"cliente": "REDRUELLOS PELUQUERAS, SL", "canal": "Salón", "venta": 601.42, "pct": 0.1}, {"cliente": "PALCRIS SL", "canal": "Salón", "venta": 597.0, "pct": 0.1}, {"cliente": "LOOKGE CORP, S.L.", "canal": "Salón", "venta": 583.92, "pct": 0.1}, {"cliente": "MAPEXBELL, SL", "canal": "DN", "venta": 570.16, "pct": 0.1}, {"cliente": "EDISHEVA GONZALEZ VAZQUEZ", "canal": "Salón", "venta": 543.6, "pct": 0.1}, {"cliente": "NIYIRET MONTILLA RUEDA", "canal": "DN", "venta": 536.64, "pct": 0.1}, {"cliente": "ROGER NEBOT", "canal": "Salón", "venta": 521.52, "pct": 0.1}, {"cliente": "ELICES SALVADOR S.C", "canal": "DN", "venta": 488.94, "pct": 0.1}, {"cliente": "ANA CAÑADAS", "canal": "Salón", "venta": 472.52, "pct": 0.1}, {"cliente": "OIANE MARTIN SANCHEZ", "canal": "Salón", "venta": 456.78, "pct": 0.1}, {"cliente": "GUSTAVO DELERA PERALTA", "canal": "Salón", "venta": 445.04, "pct": 0.1}, {"cliente": "THAIS FONOLLOSA MARTIN", "canal": "DN", "venta": 438.0, "pct": 0.0}, {"cliente": "SARA RUBIO", "canal": "Salón", "venta": 428.31, "pct": 0.0}, {"cliente": "ANDREA PRESMANES APEZTEGUIA", "canal": "Salón", "venta": 422.21, "pct": 0.0}, {"cliente": "SORAYA PEÑA ORTIZ", "canal": "Otro", "venta": 412.75, "pct": 0.0}, {"cliente": "IMAXEN BIENESTAR Y BELLEZA SL", "canal": "Salón", "venta": 412.44, "pct": 0.0}, {"cliente": "ENCARNACION PACHECO SANCHEZ", "canal": "Salón", "venta": 412.36, "pct": 0.0}, {"cliente": "TACHA BEAUTY & WELLNESS SL.", "canal": "Salón", "venta": 410.16, "pct": 0.0}, {"cliente": "FATIMA TERESA TORMO CASTRO", "canal": "Salón", "venta": 409.83, "pct": 0.0}, {"cliente": "AMPARO FERNANDEZ SILVA", "canal": "Salón", "venta": 407.2, "pct": 0.0}, {"cliente": "CAROLINA RODAL TENORIO", "canal": "DN", "venta": 402.48, "pct": 0.0}, {"cliente": "METODO, C.D.M", "canal": "Salón", "venta": 402.0, "pct": 0.0}, {"cliente": "MIRIAM MASGORET ROSELL", "canal": "DN", "venta": 400.21, "pct": 0.0}, {"cliente": "BENZAQUEN 2, S.L.", "canal": "Salón", "venta": 385.0, "pct": 0.0}, {"cliente": "SALON BASKUÑANA PELUQUEROS", "canal": "Salón", "venta": 353.76, "pct": 0.0}, {"cliente": "Mª JULIANA JIMENEZ LARA", "canal": "DN", "venta": 347.46, "pct": 0.0}, {"cliente": "YANDUB-85, SL", "canal": "Salón", "venta": 337.7, "pct": 0.0}, {"cliente": "YARIBU BELLEZA, S.L.", "canal": "DN", "venta": 335.92, "pct": 0.0}, {"cliente": "COSMETICA COSBAR, S.L.", "canal": "DN", "venta": 309.0, "pct": 0.0}, {"cliente": "DAVID HENRY LESUR DEPRET", "canal": "Salón", "venta": 306.0, "pct": 0.0}, {"cliente": "GESCOOK GESTION DE SERVICIOS, S.L.", "canal": "Salón", "venta": 287.0, "pct": 0.0}, {"cliente": "PAULA ROMERO GOMEZ", "canal": "Salón", "venta": 273.79, "pct": 0.0}, {"cliente": "THAIS LOPEZ MOSEGUI", "canal": "Salón", "venta": 268.32, "pct": 0.0}, {"cliente": "ROSANA GALVEZ ADRADA", "canal": "Salón", "venta": 242.0, "pct": 0.0}, {"cliente": "SALON VALVERDE 44 SL", "canal": "Salón", "venta": 228.0, "pct": 0.0}, {"cliente": "EVA NAVARRO ESTILISTAS", "canal": "DN", "venta": 224.04, "pct": 0.0}, {"cliente": "MARIA LUISA LASTRAS GARCIA", "canal": "Salón", "venta": 216.18, "pct": 0.0}, {"cliente": "AMANDA BERNAL JIMENEZ", "canal": "Salón", "venta": 214.29, "pct": 0.0}, {"cliente": "IRIS ESCARTIN MOLINER", "canal": "DN", "venta": 205.79, "pct": 0.0}, {"cliente": "METODO, C.D.M", "canal": "DN", "venta": 201.0, "pct": 0.0}, {"cliente": "TAHE PRODUCTOS COSMETICOS SL", "canal": "DN", "venta": 200.0, "pct": 0.0}, {"cliente": "MARIA DEL MAR ADAN MARTINEZ", "canal": "DN", "venta": 196.66, "pct": 0.0}, {"cliente": "LOURDES CHAO SÁNCHEZ", "canal": "Salón", "venta": 195.24, "pct": 0.0}, {"cliente": "BIARTEMA COSMETIC SL", "canal": "Otro", "venta": 195.0, "pct": 0.0}, {"cliente": "ELISABET JIMENEZ IBAÑEZ", "canal": "DN", "venta": 188.46, "pct": 0.0}, {"cliente": "IMAGEN 93 S.L.U.", "canal": "Salón", "venta": 184.9, "pct": 0.0}, {"cliente": "OH PELUQUEROS FASHION", "canal": "Salón", "venta": 181.08, "pct": 0.0}, {"cliente": "EVA PROL S.L.", "canal": "Salón", "venta": 168.0, "pct": 0.0}, {"cliente": "MARÍA LUISA BAREA MARTÍN", "canal": "DN", "venta": 167.91, "pct": 0.0}, {"cliente": "OIANE MARTIN SANCHEZ", "canal": "DN", "venta": 152.46, "pct": 0.0}, {"cliente": "TACHA BEAUTY & WELLNESS SL.", "canal": "DN", "venta": 136.2, "pct": 0.0}, {"cliente": "ANA SANCHEZ PALOMEQUE", "canal": "DN", "venta": 134.16, "pct": 0.0}, {"cliente": "MIREIA RUIZ JOAQUIN", "canal": "Salón", "venta": 134.16, "pct": 0.0}, {"cliente": "FATIMA TERESA TORMO CASTRO", "canal": "DN", "venta": 116.0, "pct": 0.0}, {"cliente": "MEDICAL HERITAGE S.L.", "canal": "Salón", "venta": 78.0, "pct": 0.0}, {"cliente": "CODI MAGIC DREAM SLL", "canal": "Salón", "venta": 74.76, "pct": 0.0}, {"cliente": "RAQUEL LARIOS ALONSO", "canal": "Salón", "venta": 74.76, "pct": 0.0}, {"cliente": "INTERNATIONAL COSMETIC GROUP, CB", "canal": "Salón", "venta": 23.8, "pct": 0.0}], "marcas": [{"marca": "LADIOSA", "venta": 292474.51}, {"marca": "REF", "venta": 149887.47}, {"marca": "CHICLOVE", "venta": 146761.63}, {"marca": "EOLUX", "venta": 114614.01}, {"marca": "LOREAL", "venta": 104738.1}, {"marca": "REMEMBER", "venta": 15351.39}, {"marca": "WELLA", "venta": 13385.29}, {"marca": "GOLDWELL", "venta": 1651.4}, {"marca": "MAXSUM", "venta": 697.0}, {"marca": "OLAPLEX", "venta": 228.0}, {"marca": "GHD", "venta": 129.6}, {"marca": "OLIVIAGAR", "venta": 47.4}], "cogs_total": 490445.16, "venta_total": 843019.78, "margen_total": 352574.62, "pct_margen": 41.8, "ejercicios": [2026], "meses_disponibles": [1, 2, 3, 4, 5, 6]}, "WHOLESALE": {"monthly": [{"mes": 1, "venta": 210148.61, "cogs": 159297.21, "margen": 50851.4}, {"mes": 2, "venta": 137684.08, "cogs": 104980.22, "margen": 32703.86}, {"mes": 3, "venta": 96501.69, "cogs": 73213.18, "margen": 23288.51}, {"mes": 4, "venta": 195121.06, "cogs": 151997.85, "margen": 43123.21}, {"mes": 5, "venta": 154040.82, "cogs": 150677.77, "margen": 3363.05}, {"mes": 6, "venta": -171402.29, "cogs": 0.0, "margen": -171402.29}, {"mes": 7, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 8, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 9, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 10, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 11, "venta": 0.0, "cogs": 0.0, "margen": 0.0}, {"mes": 12, "venta": 0.0, "cogs": 0.0, "margen": 0.0}], "clientes": [{"cliente": "SHAZAM HAIR & COSMETIC, S.L.", "canal": "WS", "venta": 241611.98, "pct": 37.0}, {"cliente": "VELVET ECHO UNIPESSOAL LDA", "canal": "WS", "venta": 183434.21, "pct": 28.1}, {"cliente": "OVEN GLOBE, S.L.", "canal": "WS", "venta": 56441.6, "pct": 8.6}, {"cliente": "SESABE PROFESSIONAL S.L.", "canal": "WS", "venta": 52902.43, "pct": 8.1}, {"cliente": "L'OREAL ESPAÑA, S.A.", "canal": "WS", "venta": 30734.08, "pct": 4.7}, {"cliente": "MAPEXBELL, SL", "canal": "WS", "venta": 23190.84, "pct": 3.6}, {"cliente": "SERVICIO INTEGRAL DE PELUQUERIAS, G", "canal": "WS", "venta": 20482.95, "pct": 3.1}, {"cliente": "Luxus trade OÜ", "canal": "WS", "venta": 12831.23, "pct": 2.0}, {"cliente": "CF PINEDO, S.L.", "canal": "WS", "venta": 10530.46, "pct": 1.6}, {"cliente": "GME SERVICIO INTEGRAL DE PELUQUERIA", "canal": "WS", "venta": 4882.12, "pct": 0.7}, {"cliente": "VILLALBA AL ALBA, S.L.U.", "canal": "WS", "venta": 3859.68, "pct": 0.6}, {"cliente": "THE HAIR PRO DISTRIBUTION, S.L.", "canal": "WS", "venta": 2791.2, "pct": 0.4}, {"cliente": "CYB ARTICULOS DE PELUQUERIA S.L.", "canal": "WS", "venta": 2755.84, "pct": 0.4}, {"cliente": "DB COSMETIC UNIPESSOAL LDA", "canal": "WS", "venta": 2568.36, "pct": 0.4}, {"cliente": "COSMETICOS ANDREA SLU", "canal": "WS", "venta": 2384.08, "pct": 0.4}, {"cliente": "XARIG BALEAR, S.A.", "canal": "WS", "venta": 761.49, "pct": 0.1}, {"cliente": "MARIA DEL MAR ADAN MARTINEZ", "canal": "WS", "venta": 513.0, "pct": 0.1}, {"cliente": "SALON VALVERDE 44 SL", "canal": "WS", "venta": 152.5, "pct": 0.0}, {"cliente": "BEAUTYWORLD INVERSIONES, SL", "canal": "WS", "venta": 0.0, "pct": 0.0}], "marcas": [{"marca": "REDKEN", "venta": 323098.12}, {"marca": "LOREAL", "venta": 136451.28}, {"marca": "WELLA", "venta": 84250.25}, {"marca": "OLAPLEX", "venta": 50795.79}, {"marca": "MOROCCANOI", "venta": 27498.53}], "cogs_total": 640166.23, "venta_total": 622093.97, "margen_total": -18072.26, "pct_margen": -2.9, "ejercicios": [2026], "meses_disponibles": [1, 2, 3, 4, 5, 6]}};
+
+const state = {
+  DIST: { month: 0, mode: 'mensual', showAll: false },
+  WHOLESALE: { month: 0, mode: 'mensual', showAll: false },
+};
+
+const MONTH_NAMES = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const BRAND_COLORS = ['#2d6a4f','#7b3f6e','#c77d3a','#1e4d8c','#a04040','#4a7c59','#6b4fa0','#d97706','#2e6b8c','#8c5a3a','#3d5a80','#7d4e4e','#5a7d3d'];
+
+function fmt(n) {
+  if (n == null || isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return (n/1000000).toFixed(2) + ' M€';
+  if (abs >= 1000) return new Intl.NumberFormat('es-ES', {minimumFractionDigits:0,maximumFractionDigits:0}).format(Math.round(n)) + ' €';
+  return new Intl.NumberFormat('es-ES', {minimumFractionDigits:2,maximumFractionDigits:2}).format(n) + ' €';
+}
+
+function fmtShort(n) {
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (abs >= 1000) return Math.round(n/1000) + 'K';
+  return Math.round(n) + '';
+}
+
+function canalTag(c) {
+  const map = { DN:'tag-dn', DI:'tag-di', 'Salón':'tag-salon', WS:'tag-ws', Otro:'tag-otro' };
+  return `<span class="canal-tag ${map[c]||'tag-otro'}">${c}</span>`;
+}
+
+// Filtra meses con algún dato relevante
+function getActiveMonths(monthly) {
+  return monthly.filter(m => Math.abs(m.venta) > 0.01 || Math.abs(m.cogs) > 0.01);
+}
+
+function drawBarLine(canvasId, monthly, color1, color2, lineColor) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  // Solo meses con datos
+  const active = monthly.filter(m => Math.abs(m.venta) > 0.01 || Math.abs(m.cogs) > 0.01);
+  if (!active.length) {
+    // Si no hay datos, limpiar canvas
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth || 400;
+    canvas.height = 240;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#9b9590';
+    ctx.font = '13px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sin datos para el período seleccionado', canvas.width/2, 120);
+    return;
+  }
+
+  const labels = active.map(m => MONTH_NAMES[m.mes]);
+  const ventas = active.map(m => m.venta);
+  const cogs   = active.map(m => m.cogs);
+  const margens= active.map(m => m.margen);
+
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth || 500;
+  const H = 240;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top: 24, right: 16, bottom: 40, left: 58 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+
+  // Rango de valores — excluir valores extremos negativos del eje si distorsionan
+  // Calcular percentil para escala robusta
+  const allVals = [...ventas, ...cogs, ...margens];
+  const sorted = [...allVals].sort((a,b)=>a-b);
+  // Usar percentil 5/95 para escala si hay outliers
+  const p5  = sorted[Math.floor(sorted.length * 0.05)];
+  const p95 = sorted[Math.floor(sorted.length * 0.95)];
+  const rawMin = Math.min(...allVals);
+  const rawMax = Math.max(...allVals);
+  
+  // Si el mínimo está muy lejos de p5, limitamos la escala visualmente
+  let minV = rawMin < p5 * 3 && rawMin < -rawMax ? p5 * 1.5 : rawMin;
+  let maxV = rawMax * 1.12;
+  minV = Math.min(minV, 0);
+  if (maxV <= minV) maxV = minV + 1;
+  const range = maxV - minV;
+
+  // Grid
+  ctx.strokeStyle = '#e8e3da';
+  ctx.lineWidth = 1;
+  const ticks = 5;
+  for (let i = 0; i <= ticks; i++) {
+    const val = minV + (i/ticks) * range;
+    const yc  = PAD.top + ch - (val - minV)/range * ch;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, yc);
+    ctx.lineTo(PAD.left + cw, yc);
+    ctx.stroke();
+    ctx.fillStyle = '#9b9590';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText(fmtShort(val), PAD.left - 5, yc + 3);
+  }
+
+  // Zero line
+  if (minV < 0) {
+    const yZero = PAD.top + ch - (0-minV)/range * ch;
+    ctx.strokeStyle = '#bbb';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, yZero);
+    ctx.lineTo(PAD.left + cw, yZero);
+    ctx.stroke();
+  }
+
+  const n = labels.length;
+  const groupW = cw / n;
+  const barW = Math.max(groupW * 0.30, 6);
+  const gap  = groupW * 0.04;
+
+  // Bars
+  for (let i = 0; i < n; i++) {
+    const xc    = PAD.left + i * groupW + groupW/2;
+    const yZero = PAD.top + ch - (0-minV)/range * ch;
+
+    // Venta bar
+    const v1 = ventas[i] || 0;
+    const y1 = PAD.top + ch - (Math.max(v1, minV) - minV)/range * ch;
+    const h1 = Math.abs(y1 - yZero);
+    ctx.fillStyle = color1 + 'cc';
+    ctx.fillRect(xc - barW - gap/2, Math.min(y1, yZero), barW, Math.max(h1, 1));
+
+    // COGS bar
+    const v2 = cogs[i] || 0;
+    const y2 = PAD.top + ch - (Math.max(v2, minV) - minV)/range * ch;
+    const h2 = Math.abs(y2 - yZero);
+    ctx.fillStyle = color2 + 'cc';
+    ctx.fillRect(xc + gap/2, Math.min(y2, yZero), barW, Math.max(h2, 1));
+
+    // Label
+    ctx.fillStyle = '#9b9590';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[i], xc, PAD.top + ch + 18);
+  }
+
+  // Margen line — clamp a la escala visible
+  const linePoints = active.map((m, i) => {
+    const val = Math.max(Math.min(m.margen, maxV), minV);
+    return {
+      x: PAD.left + i * groupW + groupW/2,
+      y: PAD.top + ch - (val - minV)/range * ch
+    };
+  });
+
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  linePoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+
+  ctx.fillStyle = lineColor;
+  linePoints.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+function drawDonut(canvasId, marcas) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth || 300;
+  const H = 260;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const labels = marcas.map(m => m.marca);
+  const values = marcas.map(m => m.venta);
+  const total  = values.reduce((a,b) => a+b, 0);
+  if (!total) {
+    ctx.fillStyle = '#9b9590';
+    ctx.font = '13px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sin datos', W/2, H/2);
+    return;
+  }
+
+  const cx = W/2;
+  const cy = H * 0.42;
+  const R  = Math.min(W, H * 0.84) * 0.36;
+  const r  = R * 0.6;
+
+  let angle = -Math.PI/2;
+  values.forEach((v, i) => {
+    const slice = (v/total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, angle, angle + slice);
+    ctx.closePath();
+    ctx.fillStyle = BRAND_COLORS[i % BRAND_COLORS.length];
+    ctx.fill();
+    angle += slice;
+  });
+
+  // Hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+
+  // Centre text
+  ctx.fillStyle = '#1a1814';
+  ctx.font = 'bold 13px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Marcas', cx, cy - 2);
+  ctx.fillStyle = '#6b6560';
+  ctx.font = '10px system-ui';
+  ctx.fillText(`${values.length} total`, cx, cy + 13);
+
+  // Legend
+  const legendY = cy + R + 14;
+  const colW = W / Math.min(3, values.length);
+  values.forEach((v, i) => {
+    const col = i % 3;
+    const row = Math.floor(i / 3);
+    const lx  = col * colW + 8;
+    const ly  = legendY + row * 18;
+    if (ly > H - 4) return;
+    ctx.fillStyle = BRAND_COLORS[i % BRAND_COLORS.length];
+    ctx.fillRect(lx, ly, 8, 8);
+    ctx.fillStyle = '#6b6560';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'left';
+    const pct = (v/total*100).toFixed(1);
+    const lbl = labels[i].length > 10 ? labels[i].slice(0,9)+'…' : labels[i];
+    ctx.fillText(`${lbl} ${pct}%`, lx+11, ly+8);
+  });
+}
+
+// DATA COMPUTATION
+function getFilteredData(bun) {
+  const s = state[bun];
+  const d = RAW[bun];
+  const month = s.month;
+  const mode  = s.mode;
+
+  let monthly = d.monthly;
+
+  if (month === 0) {
+    if (mode === 'acumulado') {
+      const acc = [];
+      let av=0, ac=0, am=0;
+      for (const m of monthly) {
+        av += m.venta; ac += m.cogs; am += m.margen;
+        acc.push({ mes:m.mes, venta:av, cogs:ac, margen:am });
+      }
+      return {
+        monthly: acc,
+        clientes: d.clientes, marcas: d.marcas,
+        venta: monthly.reduce((a,b)=>a+b.venta,0),
+        cogs:  monthly.reduce((a,b)=>a+b.cogs,0),
+        margen:monthly.reduce((a,b)=>a+b.margen,0)
+      };
+    }
+    return {
+      monthly,
+      clientes: d.clientes, marcas: d.marcas,
+      venta: monthly.reduce((a,b)=>a+b.venta,0),
+      cogs:  monthly.reduce((a,b)=>a+b.cogs,0),
+      margen:monthly.reduce((a,b)=>a+b.margen,0)
+    };
+  } else {
+    const m = monthly.find(x=>x.mes===month) || {venta:0,cogs:0,margen:0};
+    return { monthly:[m], clientes:d.clientes, marcas:d.marcas,
+      venta:m.venta, cogs:m.cogs, margen:m.margen };
+  }
+}
+
+function renderKPIs(bun, venta, cogs, margen) {
+  const p = bun==='DIST'?'dist':'ws';
+  const pct = venta ? (margen/venta*100) : 0;
+  document.getElementById(`${p}-kpi-venta`).textContent  = fmt(venta);
+  document.getElementById(`${p}-kpi-cogs`).textContent   = fmt(cogs);
+  document.getElementById(`${p}-kpi-margen`).textContent = fmt(margen);
+  document.getElementById(`${p}-kpi-pct`).textContent    = pct.toFixed(1)+'%';
+  const mCard = document.getElementById(`${p}-kpi-margen-card`);
+  const pCard = document.getElementById(`${p}-kpi-pct-card`);
+  if (mCard) mCard.className = 'kpi-card kpi-margen' + (margen<0?' negative':'');
+  if (pCard) pCard.className = 'kpi-card kpi-pct'    + (pct<0?' negative':'');
+}
+
+function updateDIST() {
+  const month = parseInt(document.getElementById('dist-month').value);
+  state.DIST.month = month;
+  const d = getFilteredData('DIST');
+  renderKPIs('DIST', d.venta, d.cogs, d.margen);
+  drawBarLine('dist-chart-evolution', d.monthly, '#2d6a4f', '#c0a060', '#c77d3a');
+  drawDonut('dist-chart-brands', RAW.DIST.marcas);
+  renderMarcas('DIST', RAW.DIST.marcas);
+  renderDistClientes();
+}
+
+function updateWS() {
+  const month = parseInt(document.getElementById('ws-month').value);
+  state.WHOLESALE.month = month;
+  const d = getFilteredData('WHOLESALE');
+  renderKPIs('WHOLESALE', d.venta, d.cogs, d.margen);
+  drawBarLine('ws-chart-evolution', d.monthly, '#7b3f6e', '#c0a060', '#c77d3a');
+  drawDonut('ws-chart-brands', RAW.WHOLESALE.marcas);
+  renderMarcas('WHOLESALE', RAW.WHOLESALE.marcas);
+  renderWSClientes();
+}
+
+function setDistMode(mode) {
+  state.DIST.mode = mode;
+  document.getElementById('dist-mode-mensual').className  = 'toggle-btn'+(mode==='mensual'?' active':'');
+  document.getElementById('dist-mode-acumulado').className= 'toggle-btn'+(mode==='acumulado'?' active':'');
+  updateDIST();
+}
+function setWSMode(mode) {
+  state.WHOLESALE.mode = mode;
+  document.getElementById('ws-mode-mensual').className  = 'toggle-btn'+(mode==='mensual'?' active':'');
+  document.getElementById('ws-mode-acumulado').className= 'toggle-btn'+(mode==='acumulado'?' active':'');
+  updateWS();
+}
+
+function renderDistClientes() {
+  const search = document.getElementById('dist-search').value.toLowerCase();
+  const canal  = document.getElementById('dist-canal-filter').value;
+  const showAll= state.DIST.showAll;
+  const filtered = RAW.DIST.clientes.filter(c => {
+    return (!search || c.cliente.toLowerCase().includes(search)) &&
+           (!canal  || c.canal === canal);
+  });
+  const displayed = showAll ? filtered : filtered.slice(0,7);
+  document.getElementById('dist-clientes-body').innerHTML = displayed.map(c=>`
+    <tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${c.cliente}</td>
+      <td>${canalTag(c.canal)}</td>
+      <td class="right">${fmt(c.venta)}</td>
+      <td class="right pct">${c.pct.toFixed(1)}%</td>
+    </tr>`).join('');
+  const btn = document.getElementById('dist-show-more');
+  if (filtered.length <= 7) { btn.style.display='none'; }
+  else {
+    btn.style.display='block';
+    btn.textContent = showAll ? `Mostrar top 7 ▴` : `Ver todos (${filtered.length}) ▾`;
+  }
+}
+
+function renderWSClientes() {
+  const search = document.getElementById('ws-search').value.toLowerCase();
+  const showAll= state.WHOLESALE.showAll;
+  const filtered = RAW.WHOLESALE.clientes.filter(c =>
+    !search || c.cliente.toLowerCase().includes(search)
+  );
+  const displayed = showAll ? filtered : filtered.slice(0,7);
+  document.getElementById('ws-clientes-body').innerHTML = displayed.map(c=>`
+    <tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${c.cliente}</td>
+      <td>${canalTag(c.canal)}</td>
+      <td class="right">${fmt(c.venta)}</td>
+      <td class="right pct">${c.pct.toFixed(1)}%</td>
+    </tr>`).join('');
+  const btn = document.getElementById('ws-show-more');
+  if (filtered.length <= 7) { btn.style.display='none'; }
+  else {
+    btn.style.display='block';
+    btn.textContent = showAll ? `Mostrar top 7 ▴` : `Ver todos (${filtered.length}) ▾`;
+  }
+}
+
+function renderMarcas(bun, marcas) {
+  const p = bun==='DIST'?'dist':'ws';
+  const totalV = marcas.reduce((a,b)=>a+b.venta,0);
+  document.getElementById(`${p}-marcas-body`).innerHTML = marcas.map((m,i)=>`
+    <tr>
+      <td><div class="marca-row">
+        <div class="marca-dot" style="background:${BRAND_COLORS[i%BRAND_COLORS.length]}"></div>
+        <span style="font-weight:500">${m.marca}</span>
+      </div></td>
+      <td class="right">${fmt(m.venta)}</td>
+      <td class="right pct">${(m.venta/totalV*100).toFixed(1)}%</td>
+    </tr>`).join('');
+}
+
+function toggleDistMore() { state.DIST.showAll = !state.DIST.showAll; renderDistClientes(); }
+function toggleWSMore()  { state.WHOLESALE.showAll = !state.WHOLESALE.showAll; renderWSClientes(); }
+
+let activeTab = 'DIST';
+function switchTab(tab) {
+  activeTab = tab;
+  ['DIST','WHOLESALE'].forEach(t => {
+    document.getElementById(`content-${t}`).className = 'tab-content'+(t===tab?' active':'');
+  });
+  document.getElementById('tab-dist').className = 'tab-btn'+(tab==='DIST'?' active-dist':'');
+  document.getElementById('tab-ws').className   = 'tab-btn'+(tab==='WHOLESALE'?' active-ws':'');
+  setTimeout(()=>{ tab==='DIST' ? updateDIST() : updateWS(); }, 20);
+}
+
+window.addEventListener('load', ()=>{
+  updateDIST();
+  // Pre-render WS so donut is ready when tab opens
+  const wsd = getFilteredData('WHOLESALE');
+  renderKPIs('WHOLESALE', wsd.venta, wsd.cogs, wsd.margen);
+  renderMarcas('WHOLESALE', RAW.WHOLESALE.marcas);
+  renderWSClientes();
+  // WS charts need the tab visible; we trigger on tab switch instead
+});
+
+window.addEventListener('resize', ()=>{
+  if (activeTab==='DIST') updateDIST(); else updateWS();
+});
+</script>
+</body>
+</html>
