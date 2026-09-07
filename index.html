@@ -104,6 +104,21 @@ body {
   box-shadow: 0 6px 28px rgba(0,0,0,0.08);
   transform: translateY(-2px);
 }
+.nav-card-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+.nav-card-disabled:hover {
+  border-color: #ddd8cc;
+  box-shadow: none;
+  transform: none;
+}
+.nav-card-disabled .nav-card-arrow,
+.nav-card-disabled:hover .nav-card-arrow {
+  color: #a39c8c;
+  gap: 8px;
+}
 .nav-card-label {
   font-family: 'Inter', sans-serif;
   font-size: 9.5px;
@@ -203,7 +218,7 @@ body {
 
   <div class="cards-row">
 
-    <a class="nav-card" href="ventas.html">
+    <div class="nav-card nav-card-disabled" aria-disabled="true">
       <div class="nav-card-icon ventas">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
@@ -213,8 +228,8 @@ body {
       <div class="nav-card-label">Comercial</div>
       <div class="nav-card-title">Informe de Ventas</div>
       <div class="nav-card-desc">Venta, coste y margen bruto por BUN, marca y cliente.</div>
-      <div class="nav-card-arrow">Ver informe →</div>
-    </a>
+      <div class="nav-card-arrow">Próximamente</div>
+    </div>
 
     <a class="nav-card" href="compras.html">
       <div class="nav-card-icon compras">
