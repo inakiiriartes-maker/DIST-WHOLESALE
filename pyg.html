@@ -213,6 +213,52 @@ th.sel-month{background:#e4d9b8;color:var(--text-h);}
 .bunnav button:hover:not(.active){
   background:rgba(28,26,20,0.08);
 }
+.bunnav button.acum-btn{
+  border-style:dashed;
+}
+
+.acum-chips{
+  display:none;
+  align-items:center;
+  gap:8px;
+  max-width:1180px;
+  margin:0 auto;
+  padding:10px 24px 0;
+  flex-wrap:wrap;
+}
+.acum-chips.show{display:flex;}
+.acum-chips-label{
+  font-family:'Inter',sans-serif;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  margin-right:2px;
+}
+.acum-chips .chip{
+  font-family:'Inter',sans-serif;
+  font-size:12px;
+  font-weight:600;
+  padding:6px 14px;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text-muted);
+  cursor:pointer;
+  border-radius:16px;
+  opacity:.5;
+  transition:background .15s, color .15s, opacity .15s, border-color .15s;
+}
+.acum-chips .chip.active{
+  background:var(--green-dark);
+  border-color:var(--green-dark);
+  color:#fff;
+  opacity:1;
+}
+.acum-chips .chip:hover:not(.active){
+  opacity:.8;
+  border-color:var(--green-line);
+}
 
 .tabnav{
   display:flex;
@@ -297,6 +343,14 @@ tr.resultado-row td{
   <button data-bun="DIST" class="active">DIST</button>
   <button data-bun="BSTORES">BSTORES</button>
   <button data-bun="WHOLESALE">WHOLESALE</button>
+  <button data-bun="ACUM" class="acum-btn">CONSOLIDADO</button>
+</div>
+
+<div class="acum-chips" id="acumChips">
+  <span class="acum-chips-label">Unidades a sumar</span>
+  <button class="chip active" data-chip="DIST">DIST</button>
+  <button class="chip active" data-chip="BSTORES">BSTORES</button>
+  <button class="chip active" data-chip="WHOLESALE">WHOLESALE</button>
 </div>
 
 <div class="tabnav">
@@ -840,6 +894,107 @@ const BUN_TITLES = {
   'BSTORES': 'BUN Beauty Stores',
   'WHOLESALE': 'BUN Wholesale'
 };
+const BUN_ORDER = ['DIST', 'BSTORES', 'WHOLESALE'];
+let acumSelected = new Set(BUN_ORDER); // unidades incluidas en el consolidado
+
+function sumArr(...arrs){
+  const len = Math.max(0, ...arrs.map(a => a ? a.length : 0));
+  const out = new Array(len).fill(0);
+  arrs.forEach(a=>{
+    if(!a) return;
+    for(let i=0;i<a.length;i++) out[i] += (a[i]||0);
+  });
+  return out;
+}
+
+// Combina TOT/BR de tab1 (Venta y Margen) para las unidades seleccionadas.
+function buildCombinedData(buns){
+  const base = DATA_BY_BUN[buns[0]];
+  const TOT = {};
+  Object.keys(base.TOT).forEach(k=>{
+    TOT[k] = sumArr(...buns.map(b=>DATA_BY_BUN[b].TOT[k]));
+  });
+  const BR = {};
+  Object.keys(base.BR).forEach(cat=>{
+    const brandNames = new Set();
+    buns.forEach(b=> Object.keys(DATA_BY_BUN[b].BR[cat]||{}).forEach(br=>brandNames.add(br)));
+    BR[cat] = {};
+    brandNames.forEach(br=>{
+      BR[cat][br] = sumArr(...buns.map(b=>(DATA_BY_BUN[b].BR[cat]||{})[br]));
+    });
+  });
+  const brandSet = new Set();
+  buns.forEach(b=>(DATA_BY_BUN[b].brands||[]).forEach(x=>brandSet.add(x)));
+  return {months: base.months, mnames: base.mnames, TOT, BR, brands: Array.from(brandSet)};
+}
+
+// Combina el árbol completo de tab2 (Visión PyG Completa): cada unidad puede tener
+// líneas/marcas/terceros distintos, así que se hace unión de claves y suma de importes.
+function buildCombinedPygFull(buns){
+  const l1Order = [];
+  buns.forEach(b=>{
+    PYG_BY_BUN[b].l1_order.forEach(l1=>{ if(!l1Order.includes(l1)) l1Order.push(l1); });
+  });
+
+  const data = {};
+  l1Order.forEach(l1=>{
+    const l2Order = [];
+    buns.forEach(b=>{
+      const node = PYG_BY_BUN[b].data[l1];
+      if(node) node.l2_order.forEach(l2=>{ if(!l2Order.includes(l2)) l2Order.push(l2); });
+    });
+
+    const subs = {};
+    l2Order.forEach(l2=>{
+      const l2Nodes = buns.map(b=>{
+        const l1node = PYG_BY_BUN[b].data[l1];
+        return (l1node && l1node.subs[l2]) || null;
+      });
+      const hasBrandAxis = l2Nodes.some(n=>n && n.hasBrandAxis);
+      const total = sumArr(...l2Nodes.map(n=>n && n.total));
+
+      if(hasBrandAxis){
+        const brandNames = [];
+        l2Nodes.forEach(n=>{
+          if(n && n.brands) Object.keys(n.brands).forEach(br=>{ if(!brandNames.includes(br)) brandNames.push(br); });
+        });
+        const brands = {};
+        brandNames.forEach(br=>{
+          const brNodes = l2Nodes.map(n=>n && n.brands && n.brands[br]);
+          const terceroNames = [];
+          brNodes.forEach(n=>{
+            if(n && n.terceros) Object.keys(n.terceros).forEach(t=>{ if(!terceroNames.includes(t)) terceroNames.push(t); });
+          });
+          const terceros = {};
+          terceroNames.forEach(t=>{
+            terceros[t] = sumArr(...brNodes.map(n=>n && n.terceros && n.terceros[t]));
+          });
+          brands[br] = {total: sumArr(...brNodes.map(n=>n && n.total)), terceros};
+        });
+        subs[l2] = {total, hasBrandAxis:true, brands};
+      } else {
+        const terceroNames = [];
+        l2Nodes.forEach(n=>{
+          if(n && n.terceros) Object.keys(n.terceros).forEach(t=>{ if(!terceroNames.includes(t)) terceroNames.push(t); });
+        });
+        const terceros = {};
+        terceroNames.forEach(t=>{
+          terceros[t] = sumArr(...l2Nodes.map(n=>n && n.terceros && n.terceros[t]));
+        });
+        subs[l2] = {total, hasBrandAxis:false, terceros};
+      }
+    });
+
+    const l1Total = sumArr(...buns.map(b=>{
+      const node = PYG_BY_BUN[b].data[l1];
+      return node && node.total;
+    }));
+    data[l1] = {l2_order: l2Order, subs, total: l1Total};
+  });
+
+  const resultado = sumArr(...buns.map(b=>PYG_BY_BUN[b].resultado));
+  return {months: PYG_BY_BUN[buns[0]].months, l1_order: l1Order, data, resultado};
+}
 
 function switchBun(bun){
   currentBun = bun;
@@ -870,11 +1025,65 @@ function switchBun(bun){
   renderPygFull();
 }
 
+// Recalcula la vista "CONSOLIDADO" con las unidades marcadas en acumSelected,
+// conservando el mes y el modo (mensual/acumulado) que el usuario ya tenía elegidos.
+function applyAcum(){
+  currentBun = 'ACUM';
+  const buns = BUN_ORDER.filter(b=>acumSelected.has(b));
+
+  DATA = buildCombinedData(buns);
+  PYG_FULL = buildCombinedPygFull(buns);
+
+  months = DATA.months;
+  nM = Math.max(months.length - 1, 1);
+  if(selMonthIdx < 0 || selMonthIdx > nM - 1) selMonthIdx = nM - 1;
+
+  pygMonths = PYG_FULL.months;
+  nPM = pygMonths.length;
+  nM2 = Math.max(nPM - 1, 1);
+  if(selMonthIdx2 < 0 || selMonthIdx2 > nM2 - 1) selMonthIdx2 = nM2 - 1;
+
+  openL1.clear();
+  openL2.clear();
+  openBrand.clear();
+
+  const label = buns.join(' + ');
+  document.getElementById('bunTitle').textContent = 'P&G · Consolidado (' + label + ')';
+  document.querySelectorAll('.bun-hint').forEach(el => el.textContent = 'CONSOLIDADO: ' + label);
+
+  populateMonthSelect();
+  render();
+  populateMonthSelect2();
+  renderPygFull();
+}
+
 document.querySelectorAll('.bunnav button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.bunnav button').forEach(b=>b.classList.toggle('active', b===btn));
-    switchBun(btn.dataset.bun);
+    const bun = btn.dataset.bun;
+    const chipsRow = document.getElementById('acumChips');
+    if(bun === 'ACUM'){
+      chipsRow.classList.add('show');
+      applyAcum();
+    } else {
+      chipsRow.classList.remove('show');
+      switchBun(bun);
+    }
   });
+});
+
+document.getElementById('acumChips').addEventListener('click', (e)=>{
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  const b = chip.dataset.chip;
+  if(acumSelected.has(b)){
+    if(acumSelected.size === 1) return; // siempre debe quedar al menos una unidad marcada
+    acumSelected.delete(b);
+  } else {
+    acumSelected.add(b);
+  }
+  chip.classList.toggle('active', acumSelected.has(b));
+  applyAcum();
 });
 </script>
 </body>
