@@ -93,7 +93,10 @@ body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color
 .prod-accordion { display:none; background:#f7f4ee; border-top:1px solid var(--border-light); }
 .prod-accordion.open { display:block; }
 .prod-wrap { padding:10px 12px 14px; }
-.prod-table { width:100%; border-collapse:collapse; font-size:11px; background:white; border-radius:3px; overflow:hidden; border:1px solid var(--border-light); }
+.prod-subtitle { font-size:9px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin:12px 0 6px; }
+.prod-subtitle:first-child { margin-top:0; }
+.prod-table { width:100%; border-collapse:collapse; font-size:11px; background:white; border-radius:3px; overflow:hidden; border:1px solid var(--border-light); margin-bottom:4px; }
+.marca-table .marca-chip { font-size:10px; padding:2px 6px; }
 .prod-table th { font-size:9px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--text-muted); padding:7px 10px; text-align:left; background:#f5f2ec; border-bottom:1px solid var(--border); white-space:nowrap; }
 .prod-table th.r { text-align:right; }
 .prod-table td { padding:6px 10px; border-bottom:1px solid var(--border-light); vertical-align:middle; }
@@ -259,6 +262,32 @@ function renderTable(){
         <td class="r">${fmtE(p.v-p.co)}</td>
       </tr>`).join('');
 
+    const marcaMap = new Map();
+    (c.prod||[]).forEach(p=>{
+      const m = marcaMap.get(p.m) || {m:p.m, v:0, co:0};
+      m.v += p.v; m.co += p.co;
+      marcaMap.set(p.m, m);
+    });
+    const marcaList = [...marcaMap.values()].sort((a,b)=>b.v-a.v);
+    const maxAbsMarcaPct = Math.max(1, ...marcaList.map(m=>Math.abs(m.v ? (m.v-m.co)/m.v*100 : 0)));
+    const marcaRows = marcaList.map(m=>{
+      const margen = m.v - m.co;
+      const pct = m.v ? margen/m.v*100 : 0;
+      const bar = Math.min(100, Math.abs(pct)/maxAbsMarcaPct*100);
+      return `<tr>
+        <td><span class="marca-chip">${m.m}</span></td>
+        <td class="r">${fmtE(m.v)}</td>
+        <td class="r">${fmtE(m.co)}</td>
+        <td class="r">${fmtE(margen)}</td>
+        <td class="r">
+          <div class="margin-bar-wrap">
+            <div class="margin-bar-track"><div class="margin-bar-fill${pct<0?' neg':''}" style="width:${bar}%"></div></div>
+            ${fmtPct(pct)}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
     return `<tr class="cli-row${open?' open':''}" data-key="${key}">
         <td></td>
         <td>
@@ -280,6 +309,15 @@ function renderTable(){
         <td colspan="6" style="padding:0;border:none">
           <div class="prod-accordion${open?' open':''}">
             <div class="prod-wrap">
+              <div class="prod-subtitle">Margen por marca</div>
+              <table class="prod-table marca-table">
+                <thead><tr>
+                  <th>Marca</th>
+                  <th class="r">Venta</th><th class="r">Coste</th><th class="r">Margen</th><th class="r">% Margen</th>
+                </tr></thead>
+                <tbody>${marcaRows}</tbody>
+              </table>
+              <div class="prod-subtitle">Detalle por artículo</div>
               <table class="prod-table">
                 <thead><tr>
                   <th>Artículo</th><th>Descripción</th><th>Marca</th>
