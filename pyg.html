@@ -405,7 +405,7 @@ tr.resultado-row td{
     <div class="card-body">
       <table id="tblPyg"></table>
     </div>
-    <div class="footnote">Signo contable: cifras de Compras/Variación de Existencias pueden aparecer negativas en meses con rappels o ajustes superiores al gasto del mes (anomalía conocida, no es un error). Septiembre queda excluido por estar incompleto.</div>
+    <div class="footnote">Signo contable: cifras de Compras/Variación de Existencias pueden aparecer negativas en meses con rappels o ajustes superiores al gasto del mes (anomalía conocida, no es un error).</div>
   </div>
 
   <div class="card">
@@ -461,7 +461,7 @@ tr.resultado-row td{
         <tbody id="tblPygFullBody"></tbody>
       </table>
     </div>
-    <div class="footnote">Ventas se muestra en positivo (ingreso); el resto de partidas conserva el signo contable original — un gasto puede aparecer negativo en meses con ajustes o abonos superiores al gasto (p. ej. rappels de compra). Septiembre queda excluido por estar incompleto.</div>
+    <div class="footnote">Ventas se muestra en positivo (ingreso); el resto de partidas conserva el signo contable original — un gasto puede aparecer negativo en meses con ajustes o abonos superiores al gasto (p. ej. rappels de compra).</div>
   </div>
 
 </div>
@@ -477,7 +477,7 @@ const PYG_BY_BUN = {"DIST":{"months":[1,2,3,4,5,6,7,8,9],"mnames":["Enero","Febr
 let PYG_FULL = PYG_BY_BUN[currentBun];
 
 let months = DATA.months;
-let nM = Math.max(months.length - 1, 1); // exclude last month (incomplete)
+let nM = months.length;
 let mode = 'M';       // 'M' mensual, 'A' acumulado
 let selMonthIdx = nM - 1; // index into months array, default last month
 
@@ -714,7 +714,7 @@ document.querySelectorAll('.tabnav button').forEach(btn=>{
 /* ================= TAB 2: VISIÓN PYG COMPLETA ================= */
 let pygMonths = PYG_FULL.months;
 let nPM = pygMonths.length;
-let nM2 = Math.max(nPM - 1, 1); // display months count, excluding last (incomplete) month
+let nM2 = nPM;
 let mode2 = 'M';
 let selMonthIdx2 = nM2 - 1;
 const openL1 = new Set();
@@ -1002,12 +1002,12 @@ function switchBun(bun){
   PYG_FULL = PYG_BY_BUN[bun];
 
   months = DATA.months;
-  nM = Math.max(months.length - 1, 1);
+  nM = months.length;
   selMonthIdx = nM - 1;
 
   pygMonths = PYG_FULL.months;
   nPM = pygMonths.length;
-  nM2 = Math.max(nPM - 1, 1);
+  nM2 = nPM;
   selMonthIdx2 = nM2 - 1;
   mode2 = 'M';
   document.querySelectorAll('#toggleAcum2 button').forEach(b=>b.classList.toggle('active', b.dataset.mode==='M'));
@@ -1035,12 +1035,12 @@ function applyAcum(){
   PYG_FULL = buildCombinedPygFull(buns);
 
   months = DATA.months;
-  nM = Math.max(months.length - 1, 1);
+  nM = months.length;
   if(selMonthIdx < 0 || selMonthIdx > nM - 1) selMonthIdx = nM - 1;
 
   pygMonths = PYG_FULL.months;
   nPM = pygMonths.length;
-  nM2 = Math.max(nPM - 1, 1);
+  nM2 = nPM;
   if(selMonthIdx2 < 0 || selMonthIdx2 > nM2 - 1) selMonthIdx2 = nM2 - 1;
 
   openL1.clear();
