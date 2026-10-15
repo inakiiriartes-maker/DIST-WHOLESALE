@@ -341,12 +341,16 @@ function renderMarcaTable(d){
         const cForceOpen = term && !c.n.toLowerCase().includes(term);
         const cOpen = openMarcaClientes.has(cKey) || cForceOpen;
         const cPct = c.mg==null ? null : (c.v ? c.mg/c.v*100 : 0);
-        const articulosRows = c.art.map(a => `<tr>
+        const articulosRows = c.art.map(a => {
+          const aPct = a.mg==null ? null : (a.v ? a.mg/a.v*100 : 0);
+          return `<tr>
             <td style="font-size:10px;color:var(--text-muted)">${a.c}</td>
             <td class="r">${fmtE(a.v)}</td>
             <td class="r">${a.co==null ? '<span class="no-data" title="Sin precio de coste en el fichero origen">—</span>' : fmtE(a.co)}</td>
             <td class="r">${a.mg==null ? '<span class="no-data" title="Sin precio de coste en el fichero origen">—</span>' : fmtE(a.mg)}</td>
-          </tr>`).join('');
+            <td class="r">${fmtPct(aPct)}</td>
+          </tr>`;
+        }).join('');
         return `<div class="cliente-row${cOpen?' open':''}" data-key="${cKey}">
             <div class="cliente-row-head" onclick="toggleMarcaCliente('${cKey.replace(/'/g,"\\'")}')">
               <span class="cli-toggle-icon">▶</span>
@@ -359,7 +363,7 @@ function renderMarcaTable(d){
             <div class="cliente-detail${cOpen?' open':''}">
               <table class="prod-table">
                 <thead><tr>
-                  <th>Código artículo</th><th class="r">Venta</th><th class="r">Coste</th><th class="r">Margen</th>
+                  <th>Código artículo</th><th class="r">Venta</th><th class="r">Coste</th><th class="r">Margen</th><th class="r">% Margen</th>
                 </tr></thead>
                 <tbody>${articulosRows}</tbody>
               </table>
@@ -432,14 +436,18 @@ function renderClienteTable(d){
     const key = currentBun+'|'+c.n;
     const open = openClients.has(key);
     const barPct = Math.min(100, Math.abs(c.pct)/maxAbsPct*100);
-    const prodRows = (c.prod||[]).map(p=>`<tr>
+    const prodRows = (c.prod||[]).map(p=>{
+      const pPct = p.v ? (p.v-p.co)/p.v*100 : 0;
+      return `<tr>
         <td style="font-size:10px;color:var(--text-muted)">${p.c}</td>
         <td>${p.d}</td>
         <td><span class="marca-chip">${p.m}</span></td>
         <td class="r">${fmtE(p.v)}</td>
         <td class="r">${fmtE(p.co)} <span class="src-flag" title="${p.s==='a'?'Precio de coste propio del artículo':(p.s==='m'?'Promedio de la marca':'Sin precio de coste')}">${p.s==='a'?'●':(p.s==='m'?'○':'—')}</span></td>
         <td class="r">${fmtE(p.v-p.co)}</td>
-      </tr>`).join('');
+        <td class="r">${fmtPct(pPct)}</td>
+      </tr>`;
+    }).join('');
 
     const marcaMap = new Map();
     (c.prod||[]).forEach(p=>{
@@ -500,7 +508,7 @@ function renderClienteTable(d){
               <table class="prod-table">
                 <thead><tr>
                   <th>Artículo</th><th>Descripción</th><th>Marca</th>
-                  <th class="r">Venta</th><th class="r">Coste</th><th class="r">Margen</th>
+                  <th class="r">Venta</th><th class="r">Coste</th><th class="r">Margen</th><th class="r">% Margen</th>
                 </tr></thead>
                 <tbody>${prodRows}</tbody>
               </table>
