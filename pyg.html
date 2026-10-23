@@ -329,33 +329,46 @@ tr.resultado-row td{
 .hidden-row{display:none;}
 .pyg-kpi-row{display:flex;gap:14px;margin-bottom:20px;}
 .pyg-kpi-row .kpi{flex:1;}
+
+/* ── FX: entrance, rule draw, touch press ── */
+@keyframes fxFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fx-reveal{opacity:0}
+.fx-reveal.fx-in{animation:fxFadeUp .6s cubic-bezier(.22,.61,.36,1) forwards}
+.fx-gold-rule{width:64px;height:2px;background:#b8860b;margin:10px 0 0;transform:scaleX(0);transform-origin:left;animation:fxRuleDraw .8s cubic-bezier(.22,.61,.36,1) .3s forwards}
+@keyframes fxRuleDraw{to{transform:scaleX(1)}}
+@media (pointer:coarse){
+  .fx-press{transition:transform .12s ease}
+  .fx-press:active{transform:scale(.97)}
+  tr.l1-row:active,tr.l2-row.expandable:active,tr.brand-row.expandable:active{background:rgba(0,0,0,.04)}
+}
 </style>
 </head>
 <body>
 
-<div class="topbar">
+<div class="topbar fx-reveal">
   <a href="index.html" class="back-home">← Volver al inicio</a>
   <h1 id="bunTitle">P&amp;G · BUN Distribución</h1>
   <div class="sub">Cuadro de Ventas y COGS por marca · Confidencial · Uso interno</div>
+  <div class="fx-gold-rule"></div>
 </div>
 
 <div class="bunnav">
-  <button data-bun="DIST" class="active">DIST</button>
-  <button data-bun="BSTORES">BSTORES</button>
-  <button data-bun="WHOLESALE">WHOLESALE</button>
-  <button data-bun="ACUM" class="acum-btn">CONSOLIDADO</button>
+  <button data-bun="DIST" class="fx-press active">DIST</button>
+  <button data-bun="BSTORES" class="fx-press">BSTORES</button>
+  <button data-bun="WHOLESALE" class="fx-press">WHOLESALE</button>
+  <button data-bun="ACUM" class="acum-btn fx-press">CONSOLIDADO</button>
 </div>
 
 <div class="acum-chips" id="acumChips">
   <span class="acum-chips-label">Unidades a sumar</span>
-  <button class="chip active" data-chip="DIST">DIST</button>
-  <button class="chip active" data-chip="BSTORES">BSTORES</button>
-  <button class="chip active" data-chip="WHOLESALE">WHOLESALE</button>
+  <button class="chip fx-press active" data-chip="DIST">DIST</button>
+  <button class="chip fx-press active" data-chip="BSTORES">BSTORES</button>
+  <button class="chip fx-press active" data-chip="WHOLESALE">WHOLESALE</button>
 </div>
 
 <div class="tabnav">
-  <button data-tab="tab1" class="active">Venta y Margen</button>
-  <button data-tab="tab2">Visión PyG Completa</button>
+  <button data-tab="tab1" class="fx-press active">Venta y Margen</button>
+  <button data-tab="tab2" class="fx-press">Visión PyG Completa</button>
 </div>
 
 <div class="container">
@@ -375,29 +388,29 @@ tr.resultado-row td{
   </div>
 
   <div class="kpis">
-    <div class="kpi venta">
+    <div class="kpi venta fx-reveal">
       <div class="lbl">Venta Total</div>
       <div class="val" id="kpiVenta">–</div>
       <div class="sub" id="kpiVentaSub">Producto + Cooperación + Royalties</div>
     </div>
-    <div class="kpi cogs">
+    <div class="kpi cogs fx-reveal">
       <div class="lbl">COGS Total</div>
       <div class="val" id="kpiCogs">–</div>
       <div class="sub" id="kpiCogsSub">Compras + Variación Exist. + Rappel + Comisión</div>
     </div>
-    <div class="kpi margen">
+    <div class="kpi margen fx-reveal">
       <div class="lbl">Margen Bruto (Producto)</div>
       <div class="val" id="kpiMargen">–</div>
       <div class="sub">Venta Producto − (Compras + Var. Existencias + Rappel)</div>
     </div>
-    <div class="kpi margen">
+    <div class="kpi margen fx-reveal">
       <div class="lbl">% Margen (Producto)</div>
       <div class="val" id="kpiPct">–</div>
       <div class="sub">Excluye Cooperación Comercial</div>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card fx-reveal">
     <div class="card-h">
       <h2>Cuenta de Resultados — Evolución Mensual</h2>
       <div class="hint"><span class="bun-hint">DIST</span> · valores en €</div>
@@ -408,7 +421,7 @@ tr.resultado-row td{
     <div class="footnote">Signo contable: cifras de Compras/Variación de Existencias pueden aparecer negativas en meses con rappels o ajustes superiores al gasto del mes (anomalía conocida, no es un error).</div>
   </div>
 
-  <div class="card">
+  <div class="card fx-reveal">
     <div class="card-h">
       <h2>Desglose por Marca (PRO)</h2>
       <div class="hint" id="brandHint">Periodo seleccionado</div>
@@ -436,21 +449,21 @@ tr.resultado-row td{
   </div>
 
   <div class="pyg-kpi-row">
-    <div class="kpi venta">
+    <div class="kpi venta fx-reveal">
       <div class="lbl">Total Ventas (1)</div>
       <div class="val" id="pygKpiVentas">–</div>
     </div>
-    <div class="kpi cogs">
+    <div class="kpi cogs fx-reveal">
       <div class="lbl">Total Gastos (2–6)</div>
       <div class="val" id="pygKpiGastos">–</div>
     </div>
-    <div class="kpi margen">
+    <div class="kpi margen fx-reveal">
       <div class="lbl">Resultado</div>
       <div class="val" id="pygKpiResultado">–</div>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card fx-reveal">
     <div class="card-h">
       <h2>Cuenta de Resultados Completa</h2>
       <div class="hint">Clic en una línea para desplegar su detalle · <span class="bun-hint">DIST</span></div>
@@ -486,6 +499,26 @@ const fmt = (n) => {
   return (n<0? '−' : '') + '' + Math.abs(Math.round(n)).toLocaleString('es-ES') + ' €';
 };
 const fmtPct = (n) => (n<0?'−':'') + Math.abs(n).toFixed(1).replace('.',',') + ' %';
+
+// ---- FX helpers: entrance reveal, counters ----
+function fxRevealAll(root){
+  (root||document).querySelectorAll('.fx-reveal:not(.fx-in)').forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('fx-in'), i*70);
+  });
+}
+function fxCounter(el, target, fmtFn, dur){
+  if(!el) return;
+  dur = dur || 1000;
+  let startT = null;
+  function step(ts){
+    if(!startT) startT = ts;
+    const p = Math.min(1, (ts-startT)/dur);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = fmtFn(target*eased);
+    if(p<1) requestAnimationFrame(step); else el.textContent = fmtFn(target);
+  }
+  requestAnimationFrame(step);
+}
 
 function sumRange(arr, endIdxInclusive, cumulative){
   if(!cumulative) return arr[endIdxInclusive] || 0;
@@ -545,17 +578,18 @@ function render(){
   const margenBruto = VP - (CP + VE + RP);
   const pctMargen = VP !== 0 ? (margenBruto / VP) * 100 : 0;
 
-  document.getElementById('kpiVenta').textContent = fmt(ventaTotal);
-  document.getElementById('kpiCogs').textContent = fmt(cogsTotal);
+  fxCounter(document.getElementById('kpiVenta'), ventaTotal, fmt);
+  fxCounter(document.getElementById('kpiCogs'), cogsTotal, fmt);
   const elM = document.getElementById('kpiMargen');
-  elM.textContent = fmt(margenBruto);
+  fxCounter(elM, margenBruto, fmt);
   elM.classList.toggle('neg', margenBruto < 0);
   const elP = document.getElementById('kpiPct');
-  elP.textContent = fmtPct(pctMargen);
+  fxCounter(elP, pctMargen, fmtPct);
   elP.classList.toggle('neg', pctMargen < 0);
 
   renderPygTable();
   renderBrandTable();
+  fxRevealAll();
 }
 
 function renderPygTable(){
@@ -765,10 +799,10 @@ function renderPygFull(){
   PYG_FULL.l1_order.slice(1).forEach(l1=>{ gastosTotal += periodVal(PYG_FULL.data[l1].total); });
   const resultado = periodVal(PYG_FULL.resultado);
 
-  document.getElementById('pygKpiVentas').textContent = fmt(ventasTotal);
-  document.getElementById('pygKpiGastos').textContent = fmt(gastosTotal);
+  fxCounter(document.getElementById('pygKpiVentas'), ventasTotal, fmt);
+  fxCounter(document.getElementById('pygKpiGastos'), gastosTotal, fmt);
   const elR = document.getElementById('pygKpiResultado');
-  elR.textContent = fmt(resultado);
+  fxCounter(elR, resultado, fmt);
   elR.classList.toggle('neg', resultado < 0);
 
   // header row: Partida | Ene..Jun | Total (Jul always excluded)
@@ -883,6 +917,7 @@ function renderPygFull(){
       renderPygFull();
     });
   });
+  fxRevealAll();
 }
 
 populateMonthSelect2();

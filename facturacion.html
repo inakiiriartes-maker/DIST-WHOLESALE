@@ -158,11 +158,23 @@ select:focus { border-color:var(--green-dark); }
 .btn-export-filt { border-color:var(--gold); color:var(--gold); background:none; }
 .btn-export-filt:hover { background:var(--gold); color:white; }
 .btn-export svg { flex-shrink:0; }
+
+/* ── FX: entrance, rule draw, bars, touch press ── */
+@keyframes fxFadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.fx-reveal { opacity:0; }
+.fx-reveal.fx-in { animation: fxFadeUp .6s cubic-bezier(.22,.61,.36,1) forwards; }
+.fx-gold-rule { width:64px; height:2px; background:var(--gold); margin:10px 0 0; transform:scaleX(0); transform-origin:left; animation: fxRuleDraw .8s cubic-bezier(.22,.61,.36,1) .3s forwards; }
+@keyframes fxRuleDraw { to { transform:scaleX(1); } }
+.brand-bar, .cli-name + div > div { transition: width .7s cubic-bezier(.22,.61,.36,1); }
+@media (pointer:coarse) {
+  .fx-press { transition: transform .12s ease; }
+  .fx-press:active { transform: scale(.97); }
+}
 </style>
 </head>
 <body>
 
-<div class="page-header">
+<div class="page-header fx-reveal">
   <a href="index.html" class="back-home">← Volver al inicio</a>
   <div class="header-eyebrow">Provalliance · Cuadro de Mando Comercial</div>
   <div class="header-row">
@@ -172,13 +184,14 @@ select:focus { border-color:var(--green-dark); }
       Ejercicio 2026 · DIST / WHOLESALE / BSTORES / B2CECOMM
     </div>
   </div>
+  <div class="fx-gold-rule"></div>
 </div>
 
 <div class="tabs-bar">
-  <button class="tab-btn active" onclick="switchTab('DIST')">BUN Distribución</button>
-  <button class="tab-btn" onclick="switchTab('WHOLESALE')">BUN Wholesale</button>
-  <button class="tab-btn" onclick="switchTab('BSTORES')">BUN Beauty Stores</button>
-  <button class="tab-btn" onclick="switchTab('B2CECOMM')">BUN B2C Ecomm</button>
+  <button class="tab-btn fx-press active" onclick="switchTab('DIST')">BUN Distribución</button>
+  <button class="tab-btn fx-press" onclick="switchTab('WHOLESALE')">BUN Wholesale</button>
+  <button class="tab-btn fx-press" onclick="switchTab('BSTORES')">BUN Beauty Stores</button>
+  <button class="tab-btn fx-press" onclick="switchTab('B2CECOMM')">BUN B2C Ecomm</button>
 </div>
 
 <div class="main">
@@ -283,6 +296,34 @@ function fmtE(v){
   return (v<0?'−':'')+Math.abs(v).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
 }
 
+// ---- FX helpers: entrance reveal, counters, bar draw-in ----
+function fxRevealAll(root){
+  (root||document).querySelectorAll('.fx-reveal:not(.fx-in)').forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('fx-in'), i*70);
+  });
+}
+function fxCounter(el, target, fmtFn, dur){
+  if(!el) return;
+  dur = dur || 1000;
+  if(target==null){ el.textContent = fmtFn(target); return; }
+  let startT = null;
+  function step(ts){
+    if(!startT) startT = ts;
+    const p = Math.min(1, (ts-startT)/dur);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = fmtFn(target*eased);
+    if(p<1) requestAnimationFrame(step); else el.textContent = fmtFn(target);
+  }
+  requestAnimationFrame(step);
+}
+function fxAnimateBars(root){
+  const bars = (root||document).querySelectorAll('[data-fxw]');
+  requestAnimationFrame(()=>{
+    bars.forEach(b=>{ b.style.width = b.dataset.fxw; });
+  });
+}
+const fxInt = v => Math.round(v).toLocaleString('es-ES');
+
 function switchTab(bun){
   state.bun=bun; state.mes=0; state.search=''; state.marca=null;
   document.querySelectorAll('.tab-btn').forEach((b,i)=>
@@ -335,13 +376,13 @@ function kpiSubtitle(bun){
 function updateKPICards(bun){
   const kpi = getActiveKPI(bun);
   const setTxt = (id,txt) => { const el=document.getElementById(id); if(el) el.textContent = txt; };
-  setTxt('kpi-neto-val-'+bun, fmt(kpi.neto));
+  fxCounter(document.getElementById('kpi-neto-val-'+bun), kpi.neto, fmt);
   setTxt('kpi-neto-sub-'+bun, kpiSubtitle(bun));
-  setTxt('kpi-fact-val-'+bun, kpi.facturas.toLocaleString('es-ES'));
+  fxCounter(document.getElementById('kpi-fact-val-'+bun), kpi.facturas, fxInt);
   setTxt('kpi-fact-sub-'+bun, kpi.clientes+' cliente'+(kpi.clientes!==1?'s':''));
-  setTxt('kpi-cli-val-'+bun, kpi.clientes.toLocaleString('es-ES'));
+  fxCounter(document.getElementById('kpi-cli-val-'+bun), kpi.clientes, fxInt);
   setTxt('kpi-cli-sub-'+bun, kpiSubtitle(bun));
-  setTxt('kpi-uds-val-'+bun, kpi.uds.toLocaleString('es-ES'));
+  fxCounter(document.getElementById('kpi-uds-val-'+bun), kpi.uds, fxInt);
   setTxt('kpi-uds-sub-'+bun, kpiSubtitle(bun));
 }
 
@@ -378,33 +419,33 @@ function renderTab(bun){
       </div>
     </div>
     <div class="kpis">
-      <div class="kpi-card">
+      <div class="kpi-card fx-reveal">
         <div class="kpi-label">Importe Neto</div>
         <div class="kpi-value" id="kpi-neto-val-${bun}">${fmt(kpi.neto)}</div>
         <div class="kpi-sub" id="kpi-neto-sub-${bun}">${kpiSubtitle(bun)}</div>
       </div>
-      <div class="kpi-card count">
+      <div class="kpi-card count fx-reveal">
         <div class="kpi-label">Facturas</div>
         <div class="kpi-value" id="kpi-fact-val-${bun}">${kpi.facturas.toLocaleString('es-ES')}</div>
         <div class="kpi-sub" id="kpi-fact-sub-${bun}">${kpi.clientes} cliente${kpi.clientes!==1?'s':''}</div>
       </div>
-      <div class="kpi-card count">
+      <div class="kpi-card count fx-reveal">
         <div class="kpi-label">Clientes</div>
         <div class="kpi-value" id="kpi-cli-val-${bun}">${kpi.clientes.toLocaleString('es-ES')}</div>
         <div class="kpi-sub" id="kpi-cli-sub-${bun}">${kpiSubtitle(bun)}</div>
       </div>
-      <div class="kpi-card count">
+      <div class="kpi-card count fx-reveal">
         <div class="kpi-label">Unidades</div>
         <div class="kpi-value" id="kpi-uds-val-${bun}">${kpi.uds.toLocaleString('es-ES')}</div>
         <div class="kpi-sub" id="kpi-uds-sub-${bun}">${kpiSubtitle(bun)}</div>
       </div>
     </div>
     <div class="content-cols">
-      <div class="card">
+      <div class="card fx-reveal">
         <div class="table-header" id="cli-hdr-${bun}"></div>
         <div id="cli-tbl-${bun}"></div>
       </div>
-      <div class="card">
+      <div class="card fx-reveal">
         <div class="section-title">Marcas · ${mesLabel(state.mes)}${accLabel()} <span style="font-weight:400;opacity:0.6;font-size:9px">— clic para filtrar</span></div>
         <div id="marc-tbl-${bun}"></div>
       </div>
@@ -413,6 +454,8 @@ function renderTab(bun){
   renderMarcTable(bun);
   renderCliHeader(bun);
   renderCliTable(bun);
+  updateKPICards(bun);
+  fxRevealAll();
 }
 
 /* ── BRAND TABLE ── */
@@ -428,10 +471,10 @@ function renderMarcTable(bun){
       const isDimmed   = state.marca!==null && !isSelected;
       const barW = maxN ? Math.round((Math.abs(m.neto)/maxN)*80) : 0;
       const safe = m.n.replace(/'/g,"\\'");
-      return `<tr class="brand-row${isSelected?' selected':''}${isDimmed?' dimmed':''}"
+      return `<tr class="brand-row fx-press${isSelected?' selected':''}${isDimmed?' dimmed':''}"
                   onclick="onMarcaClick('${bun}','${safe}')">
         <td><div class="brand-bar-wrap">
-          <div class="brand-bar" style="width:${barW}px"></div>
+          <div class="brand-bar" style="width:0px" data-fxw="${barW}px"></div>
           <span class="brand-name-cell">${m.n}</span>
           ${isSelected?'<span style="margin-left:4px;font-size:9px;color:var(--green-dark)">●</span>':''}
         </div></td>
@@ -439,6 +482,7 @@ function renderMarcTable(bun){
         <td class="r">${m.uds.toLocaleString('es-ES')}</td>
       </tr>`;
     }).join('')}</tbody></table>`;
+  fxAnimateBars(wrap);
 }
 
 /* ── MARCA CLICK ── */
@@ -487,11 +531,11 @@ function renderCliTable(bun){
       return `
         <tr class="cli-row" id="row-${cid}">
           <td>
-            <div class="cli-name" onclick="toggleClient('${cid}','${bun}','${c.n.replace(/'/g,"\\'")}')">
+            <div class="cli-name fx-press" onclick="toggleClient('${cid}','${bun}','${c.n.replace(/'/g,"\\'")}')">
               <span class="cli-toggle-icon">▶</span>${c.n}
             </div>
             <div style="margin-top:5px">
-              <div style="height:3px;background:var(--green-dark);border-radius:2px;width:${barW}px;opacity:0.35"></div>
+              <div style="height:3px;background:var(--green-dark);border-radius:2px;width:0px;opacity:0.35" data-fxw="${barW}px"></div>
             </div>
           </td>
           <td class="num-cell">${fmtE(c.neto)}</td>
@@ -500,6 +544,7 @@ function renderCliTable(bun){
           <div class="inv-accordion" id="acc-${cid}"></div>
         </td></tr>`;
     }).join('')}</tbody></table>`;
+  fxAnimateBars(wrap);
 }
 
 /* ── TOGGLE CLIENT ── */

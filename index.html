@@ -199,26 +199,37 @@ body {
   .cards-row { flex-direction: column; align-items: center; }
   .nav-card { width: 100%; max-width: 320px; }
 }
+
+/* ── FX: entrance, rule draw, touch press ── */
+@keyframes fxFadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.fx-reveal { opacity:0; }
+.fx-reveal.fx-in { animation: fxFadeUp .6s cubic-bezier(.22,.61,.36,1) forwards; }
+@keyframes fxRuleDraw { to { transform:scaleX(1); } }
+.fx-rule { transform:scaleX(0); transform-origin:left; animation: fxRuleDraw .8s cubic-bezier(.22,.61,.36,1) .3s forwards; }
+@media (pointer:coarse) {
+  .fx-press { transition: transform .12s ease; }
+  .fx-press:active { transform: scale(.97); }
+}
 </style>
 </head>
 <body>
 
-<div class="cover-topbar">
+<div class="cover-topbar fx-reveal">
   <span class="cover-topbar-label">Cuadro de Mando Comercial</span>
   <span class="cover-topbar-label">Confidencial · Uso Interno</span>
 </div>
 
 <div class="cover-center">
-  <div class="cover-eyebrow">Ejercicio 2026</div>
-  <div class="cover-title">PROVALLIANCE</div>
-  <div class="cover-divider"></div>
-  <div class="cover-desc">
+  <div class="cover-eyebrow fx-reveal">Ejercicio 2026</div>
+  <div class="cover-title fx-reveal">PROVALLIANCE</div>
+  <div class="cover-divider fx-rule"></div>
+  <div class="cover-desc fx-reveal">
     Selecciona el informe que quieres consultar.
   </div>
 
   <div class="cards-row">
 
-    <a class="nav-card" href="ventas.html">
+    <a class="nav-card fx-reveal fx-press" href="ventas.html">
       <div class="nav-card-icon ventas">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
@@ -231,7 +242,7 @@ body {
       <div class="nav-card-arrow">Ver informe →</div>
     </a>
 
-    <a class="nav-card" href="compras.html">
+    <a class="nav-card fx-reveal fx-press" href="compras.html">
       <div class="nav-card-icon compras">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
@@ -245,7 +256,7 @@ body {
       <div class="nav-card-arrow">Ver informe →</div>
     </a>
 
-    <a class="nav-card" href="facturacion.html">
+    <a class="nav-card fx-reveal fx-press" href="facturacion.html">
       <div class="nav-card-icon facturacion">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -261,7 +272,7 @@ body {
       <div class="nav-card-arrow">Ver informe →</div>
     </a>
 
-    <a class="nav-card" href="stock.html">
+    <a class="nav-card fx-reveal fx-press" href="stock.html">
       <div class="nav-card-icon stock">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
@@ -275,7 +286,7 @@ body {
       <div class="nav-card-arrow">Ver informe →</div>
     </a>
 
-    <a class="nav-card" href="pyg.html">
+    <a class="nav-card fx-reveal fx-press" href="pyg.html">
       <div class="nav-card-icon pyg">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="21" x2="21" y2="21"/>
@@ -294,9 +305,15 @@ body {
   </div>
 </div>
 
-<div class="cover-bottombar">
+<div class="cover-bottombar fx-reveal">
   <span class="cover-footnote">Cifras en euros · DIST-WHOLESALE · Sociedad 50000</span>
 </div>
+
+<script>
+document.querySelectorAll('.fx-reveal').forEach(function(el,i){
+  setTimeout(function(){ el.classList.add('fx-in'); }, i*70);
+});
+</script>
 
 </body>
 </html>
