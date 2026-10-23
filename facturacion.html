@@ -233,7 +233,7 @@ const INV = new Proxy({}, {
   }
 });
 
-const state = { bun:'DIST', mes:0, search:'', marca:null, acc:'M' };
+const state = { bun:'DIST', mes:0, search:'', marca:null, acc:'M', activeClient:null };
 
 /* ── SCOPE (mensual vs acumulado) ── */
 const _scopeCache = {};
@@ -325,7 +325,7 @@ function fxAnimateBars(root){
 const fxInt = v => Math.round(v).toLocaleString('es-ES');
 
 function switchTab(bun){
-  state.bun=bun; state.mes=0; state.search=''; state.marca=null;
+  state.bun=bun; state.mes=0; state.search=''; state.marca=null; state.activeClient=null;
   document.querySelectorAll('.tab-btn').forEach((b,i)=>
     b.classList.toggle('active',['DIST','WHOLESALE','BSTORES','B2CECOMM'][i]===bun));
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
@@ -357,6 +357,28 @@ function computeMarcaKPI(bun, marca, scope){
     clientes: clientesCount,
     uds: uds
   };
+}
+
+/* ── MARCA BREAKDOWN FOR A SINGLE CLIENT (lateral panel drill-down) ── */
+function computeClientBrands(bun, cliName, scope){
+  const cli = state.marca
+    ? cliForMarcaFromList(scope.cli, state.marca).find(c=>c.n===cliName)
+    : scope.cli.find(c=>c.n===cliName);
+  if(!cli) return null;
+  const agg = {};
+  cli.facs.forEach(fn=>{
+    const inv = INV[fn]; if(!inv) return;
+    inv.l.forEach(l=>{
+      if(state.marca && l[2]!==state.marca) return;
+      const m = l[2];
+      if(!agg[m]) agg[m] = {n:m, neto:0, uds:0};
+      agg[m].neto += l[6];
+      agg[m].uds += l[3];
+    });
+  });
+  return Object.values(agg)
+    .map(m=>({n:m.n, neto:Math.round(m.neto*100)/100, uds:m.uds}))
+    .sort((a,b)=>b.neto-a.neto);
 }
 
 function getActiveKPI(bun){
@@ -446,7 +468,7 @@ function renderTab(bun){
         <div id="cli-tbl-${bun}"></div>
       </div>
       <div class="card fx-reveal">
-        <div class="section-title">Marcas · ${mesLabel(state.mes)}${accLabel()} <span style="font-weight:400;opacity:0.6;font-size:9px">— clic para filtrar</span></div>
+        <div class="section-title" id="marc-title-${bun}"></div>
         <div id="marc-tbl-${bun}"></div>
       </div>
     </div>`;
@@ -460,19 +482,37 @@ function renderTab(bun){
 
 /* ── BRAND TABLE ── */
 function renderMarcTable(bun){
-  const marcas = getScopeData(bun).marc;
+  const titleEl = document.getElementById('marc-title-'+bun);
   const wrap = document.getElementById('marc-tbl-'+bun);
+  const baseLabel = 'Marcas · ' + mesLabel(state.mes) + accLabel();
+
+  let marcas, isClientView = false;
+  if(state.activeClient){
+    const clientBrands = computeClientBrands(bun, state.activeClient, getScopeData(bun));
+    if(clientBrands){ marcas = clientBrands; isClientView = true; }
+  }
+  if(!isClientView) marcas = getScopeData(bun).marc;
+
+  if(isClientView){
+    const safe = state.activeClient.replace(/'/g,"\\'");
+    titleEl.innerHTML = `${baseLabel} ·
+      <span class="brand-filter-badge" title="Volver al desglose del BUN" onclick="clearActiveClient('${bun}')">
+        ${state.activeClient} <span class="bfb-x">✕</span></span>`;
+  } else {
+    titleEl.innerHTML = `${baseLabel} <span style="font-weight:400;opacity:0.6;font-size:9px">— clic en un cliente para ver sus marcas, o clic aquí para filtrar</span>`;
+  }
+
   if(!marcas.length){ wrap.innerHTML='<div class="empty-state">Sin datos</div>'; return; }
   const maxN = Math.max(...marcas.map(m=>Math.abs(m.neto)));
   wrap.innerHTML = `<table class="brand-table">
     <thead><tr><th>Marca</th><th class="r">Neto</th><th class="r">Uds.</th></tr></thead>
     <tbody>${marcas.map(m=>{
-      const isSelected = state.marca===m.n;
-      const isDimmed   = state.marca!==null && !isSelected;
+      const isSelected = !isClientView && state.marca===m.n;
+      const isDimmed   = !isClientView && state.marca!==null && !isSelected;
       const barW = maxN ? Math.round((Math.abs(m.neto)/maxN)*80) : 0;
       const safe = m.n.replace(/'/g,"\\'");
       return `<tr class="brand-row fx-press${isSelected?' selected':''}${isDimmed?' dimmed':''}"
-                  onclick="onMarcaClick('${bun}','${safe}')">
+                  ${isClientView?'':`onclick="onMarcaClick('${bun}','${safe}')"`}>
         <td><div class="brand-bar-wrap">
           <div class="brand-bar" style="width:0px" data-fxw="${barW}px"></div>
           <span class="brand-name-cell">${m.n}</span>
@@ -483,6 +523,15 @@ function renderMarcTable(bun){
       </tr>`;
     }).join('')}</tbody></table>`;
   fxAnimateBars(wrap);
+}
+
+function setActiveClient(bun, cliName){
+  state.activeClient = cliName;
+  renderMarcTable(bun);
+}
+function clearActiveClient(bun){
+  state.activeClient = null;
+  renderMarcTable(bun);
 }
 
 /* ── MARCA CLICK ── */
@@ -551,7 +600,12 @@ function renderCliTable(bun){
 function toggleClient(cid, bun, cliName){
   const row=document.getElementById('row-'+cid);
   const acc=document.getElementById('acc-'+cid);
-  if(acc.classList.contains('open')){ acc.classList.remove('open'); row.classList.remove('open'); return; }
+  if(acc.classList.contains('open')){
+    acc.classList.remove('open'); row.classList.remove('open');
+    if(state.activeClient===cliName) clearActiveClient(bun);
+    return;
+  }
+  setActiveClient(bun, cliName);
 
   const scope = getScopeData(bun);
   const cli = state.marca
@@ -619,15 +673,15 @@ function toggleInvoice(iid, fn){
 }
 
 /* ── EVENTS ── */
-function onMesChange(bun,val){ state.mes=parseInt(val); state.search=''; state.marca=null; renderTab(bun); }
+function onMesChange(bun,val){ state.mes=parseInt(val); state.search=''; state.marca=null; state.activeClient=null; renderTab(bun); }
 function onAccChange(bun,mode){
   if(state.mes===0 || state.acc===mode) return;
-  state.acc=mode; state.search=''; state.marca=null;
+  state.acc=mode; state.search=''; state.marca=null; state.activeClient=null;
   renderTab(bun);
 }
 function onSearch(bun,val){ state.search=val; renderCliTable(bun); }
 function clearFilters(bun){
-  state.search=''; state.marca=null;
+  state.search=''; state.marca=null; state.activeClient=null;
   const el=document.getElementById('srch-'+bun); if(el) el.value='';
   renderMarcTable(bun); renderCliHeader(bun); renderCliTable(bun);
   updateKPICards(bun);
