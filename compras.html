@@ -81,31 +81,43 @@ tbody tr:hover{background:var(--sf2)}
 .btn-export-filt:hover{background:var(--db)}
 .btn-export-all{border-color:var(--gold);color:var(--gold)}
 .btn-export-all:hover{background:#f5efd8}
+
+/* ── FX: entrance, rule draw, touch press ── */
+@keyframes fxFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fx-reveal{opacity:0}
+.fx-reveal.fx-in{animation:fxFadeUp .6s cubic-bezier(.22,.61,.36,1) forwards}
+.fx-gold-rule{width:64px;height:2px;background:var(--gold);margin:10px 0 0;transform:scaleX(0);transform-origin:left;animation:fxRuleDraw .8s cubic-bezier(.22,.61,.36,1) .3s forwards}
+@keyframes fxRuleDraw{to{transform:scaleX(1)}}
+@media (pointer:coarse){
+  .fx-press{transition:transform .12s ease}
+  .fx-press:active{transform:scale(.97)}
+}
 </style>
 </head>
 <body>
 <div class="pg">
 <a href="index.html" class="back">← Volver al inicio</a>
 
-<div class="hdr">
+<div class="hdr fx-reveal">
   <div class="ey">Provalliance &middot; Cuadro de Mando Compras &middot; CCO 20997/20998/20999</div>
   <div class="hdr-row">
     <h1 class="ttl">Informe de Compras</h1>
     <div class="hmeta"><strong>Ejercicio 2026</strong><br>Tipo PCP &middot; CCO 20999/20998/20997 &middot; Excluye intragrupo<br>Gasto = &Sigma; Precio Neto &times; Ud. Recepcionadas</div>
   </div>
+  <div class="fx-gold-rule"></div>
 </div>
 
 <div class="tabs">
-  <button class="tab active" data-tab="general">Visión general <span class="tsub">marca / proveedor</span></button>
-  <button class="tab" data-tab="detalle">Detalle por proveedor <span class="tsub">→ pedidos y líneas</span></button>
+  <button class="tab fx-press active" data-tab="general">Visión general <span class="tsub">marca / proveedor</span></button>
+  <button class="tab fx-press" data-tab="detalle">Detalle por proveedor <span class="tsub">→ pedidos y líneas</span></button>
 </div>
 
 <div id="tab-general" class="tab-content active">
   <div class="ctrl">
     <div class="cg"><span class="cl">Mes</span><select id="sel-mes"><option value="0">Todos</option></select></div>
     <div class="vbs" id="vb-group">
-      <button class="vb active" data-view="marca">Por marca</button>
-      <button class="vb" data-view="proveedor">Por proveedor</button>
+      <button class="vb fx-press active" data-view="marca">Por marca</button>
+      <button class="vb fx-press" data-view="proveedor">Por proveedor</button>
     </div>
     <div class="export-btns">
       <button class="btn-export btn-export-filt" onclick="exportExcel(false)" title="Exportar datos del mes seleccionado">
@@ -120,18 +132,18 @@ tbody tr:hover{background:var(--sf2)}
   </div>
 
   <div class="kg">
-    <div class="kpi tg"><div class="kl">Gasto Total</div><div class="kv gold" id="kv-gasto">--</div><div class="ks">&Sigma; Precio &times; Ud. Recepcionadas</div></div>
-    <div class="kpi tt"><div class="kl">Uds. Pedidas</div><div class="kv" id="kv-uped">--</div><div class="ks">Cantidad pedido UC</div></div>
-    <div class="kpi tn"><div class="kl">Uds. Recepcionadas</div><div class="kv" id="kv-urec">--</div><div class="ks">Cantidad recepcionada UC</div></div>
-    <div class="kpi tn"><div class="kl">Uds. Facturadas</div><div class="kv" id="kv-ufac">--</div><div class="ks" id="ks-ufac">78 proveedores &middot; 50 marcas</div></div>
+    <div class="kpi tg fx-reveal"><div class="kl">Gasto Total</div><div class="kv gold" id="kv-gasto">--</div><div class="ks">&Sigma; Precio &times; Ud. Recepcionadas</div></div>
+    <div class="kpi tt fx-reveal"><div class="kl">Uds. Pedidas</div><div class="kv" id="kv-uped">--</div><div class="ks">Cantidad pedido UC</div></div>
+    <div class="kpi tn fx-reveal"><div class="kl">Uds. Recepcionadas</div><div class="kv" id="kv-urec">--</div><div class="ks">Cantidad recepcionada UC</div></div>
+    <div class="kpi tn fx-reveal"><div class="kl">Uds. Facturadas</div><div class="kv" id="kv-ufac">--</div><div class="ks" id="ks-ufac">78 proveedores &middot; 50 marcas</div></div>
   </div>
 
   <div class="cr">
-    <div class="pan"><div class="pt" id="donut-title">Gasto por marca</div><div class="leg" id="donut-legend"></div><div class="cw"><canvas id="donut-chart"></canvas></div></div>
-    <div class="pan"><div class="pt" id="bar-title">Evolución mensual</div><div class="cw"><canvas id="bar-chart"></canvas></div></div>
+    <div class="pan fx-reveal"><div class="pt" id="donut-title">Gasto por marca</div><div class="leg" id="donut-legend"></div><div class="cw"><canvas id="donut-chart"></canvas></div></div>
+    <div class="pan fx-reveal"><div class="pt" id="bar-title">Evolución mensual</div><div class="cw"><canvas id="bar-chart"></canvas></div></div>
   </div>
 
-  <div class="fp">
+  <div class="fp fx-reveal">
     <div class="fp-hdr"><span class="pt" id="rank-title" style="margin-bottom:0">Ranking detallado</span><input class="srch" id="srch-rank" placeholder="Buscar…" type="text"></div>
     <div class="tw"><table><thead><tr><th>#</th><th id="rank-col1">Marca</th><th class="num">Gasto</th><th class="num">%</th><th></th></tr></thead><tbody id="rank-body"></tbody></table></div>
   </div>
@@ -153,7 +165,7 @@ tbody tr:hover{background:var(--sf2)}
       </button>
     </div>
   </div>
-  <div class="fp"><div class="tw"><table id="sup-table"><thead><tr><th>#</th><th>Proveedor</th><th class="num">Gasto</th><th class="num">Uds. Ped.</th><th class="num">Uds. Rec.</th><th class="num">Uds. Fac.</th><th class="num">Pedidos</th><th class="num">Marcas</th><th></th></tr></thead><tbody id="sup-body"></tbody></table></div></div>
+  <div class="fp fx-reveal"><div class="tw"><table id="sup-table"><thead><tr><th>#</th><th>Proveedor</th><th class="num">Gasto</th><th class="num">Uds. Ped.</th><th class="num">Uds. Rec.</th><th class="num">Uds. Fac.</th><th class="num">Pedidos</th><th class="num">Marcas</th><th></th></tr></thead><tbody id="sup-body"></tbody></table></div></div>
 </div>
 
 <div class="modal-bg hidden" id="modal">
@@ -185,6 +197,33 @@ function fmtEur(v){
 function fmtNum(v){return new Intl.NumberFormat('es-ES').format(Math.round(v));}
 function fmtPct(v,t){return t?((v/t)*100).toFixed(1)+'%':'--';}
 
+// ---- FX helpers: entrance reveal, counters, observe-once ----
+function fxRevealAll(root){
+  (root||document).querySelectorAll('.fx-reveal:not(.fx-in)').forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('fx-in'), i*70);
+  });
+}
+function fxCounter(el, target, fmtFn, dur){
+  if(!el) return;
+  dur = dur || 1000;
+  let startT = null;
+  function step(ts){
+    if(!startT) startT = ts;
+    const p = Math.min(1, (ts-startT)/dur);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = fmtFn(target*eased);
+    if(p<1) requestAnimationFrame(step); else el.textContent = fmtFn(target);
+  }
+  requestAnimationFrame(step);
+}
+function fxObserveOnce(el, cb){
+  if(!el || !('IntersectionObserver' in window)){ cb(); return; }
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ cb(); io.unobserve(e.target); } });
+  }, {threshold:0.15});
+  io.observe(el);
+}
+
 let selMes=0, viewMode='marca';
 let donutChart=null, barChart=null;
 
@@ -203,10 +242,10 @@ function updateKPIs(mes){
   let g=0,up=0,ur=0,uf=0;
   if(mes===0){MONTHS.forEach(m=>{const d=RAW[m];g+=d.g;up+=d.up;ur+=d.ur;uf+=d.uf;});}
   else{const d=RAW[mes]||{g:0,up:0,ur:0,uf:0};g=d.g;up=d.up;ur=d.ur;uf=d.uf;}
-  document.getElementById('kv-gasto').textContent=fmtEur(g);
-  document.getElementById('kv-uped').textContent=fmtNum(up);
-  document.getElementById('kv-urec').textContent=fmtNum(ur);
-  document.getElementById('kv-ufac').textContent=fmtNum(uf);
+  fxCounter(document.getElementById('kv-gasto'), g, fmtEur);
+  fxCounter(document.getElementById('kv-uped'), up, fmtNum);
+  fxCounter(document.getElementById('kv-urec'), ur, fmtNum);
+  fxCounter(document.getElementById('kv-ufac'), uf, fmtNum);
 }
 
 function getBrandData(mes){
@@ -285,14 +324,14 @@ function renderSupTable(mes,query){
   const tbody=document.getElementById('sup-body');
   tbody.innerHTML=sups.map((s,i)=>`<tr>
     <td style="color:var(--t3)">${i+1}</td>
-    <td><a href="#" class="sup-link" data-sup="${encodeURIComponent(s.n)}" style="color:var(--t1);text-decoration:none;font-weight:500">${s.n}</a></td>
+    <td><a href="#" class="sup-link fx-press" data-sup="${encodeURIComponent(s.n)}" style="color:var(--t1);text-decoration:none;font-weight:500">${s.n}</a></td>
     <td class="num">${fmtEur(s._g)}</td>
     <td class="num">${fmtNum(s.up)}</td>
     <td class="num">${fmtNum(s.ur)}</td>
     <td class="num">${fmtNum(s.uf)}</td>
     <td class="num">${s.np}</td>
     <td class="num">${s.nm}</td>
-    <td><a href="#" class="sup-link" data-sup="${encodeURIComponent(s.n)}" style="font-size:11px;color:var(--t3)">Ver →</a></td>
+    <td><a href="#" class="sup-link fx-press" data-sup="${encodeURIComponent(s.n)}" style="font-size:11px;color:var(--t3)">Ver →</a></td>
   </tr>`).join('');
   tbody.querySelectorAll('.sup-link').forEach(a=>{
     a.addEventListener('click',e=>{e.preventDefault();openModal(decodeURIComponent(a.dataset.sup));});
@@ -348,10 +387,11 @@ function toggleAccord(hdr){
 
 function refreshAll(){
   updateKPIs(selMes);
-  renderDonut(selMes,viewMode);
-  renderBar(selMes,viewMode);
+  fxObserveOnce(document.getElementById('donut-chart'), ()=>renderDonut(selMes,viewMode));
+  fxObserveOnce(document.getElementById('bar-chart'), ()=>renderBar(selMes,viewMode));
   renderRanking(selMes,viewMode,document.getElementById('srch-rank').value);
   renderSupTable(selMes,document.getElementById('srch-sup').value);
+  fxRevealAll();
 }
 
 document.querySelectorAll('.tab').forEach(t=>{

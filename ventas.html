@@ -128,11 +128,25 @@ body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color
   .cliente-row-head { grid-template-columns:16px 1fr 90px 90px 90px; }
   .cliente-row-head > :nth-child(6) { display:none; }
 }
+
+/* ── FX: entrance, rule draw, counters, bars, table fade, touch press ── */
+@keyframes fxFadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.fx-reveal { opacity:0; }
+.fx-reveal.fx-in { animation: fxFadeUp .6s cubic-bezier(.22,.61,.36,1) forwards; }
+.fx-gold-rule { width:64px; height:2px; background:var(--gold); margin:10px 0 0; transform:scaleX(0); transform-origin:left; animation: fxRuleDraw .8s cubic-bezier(.22,.61,.36,1) .3s forwards; }
+@keyframes fxRuleDraw { to { transform:scaleX(1); } }
+.margin-bar-fill { transition: width .7s cubic-bezier(.22,.61,.36,1); }
+#cliTbody { transition: opacity .18s ease; }
+#cliTbody.fx-fading { opacity:0; }
+@media (pointer:coarse) {
+  .fx-press { transition: transform .12s ease; }
+  .fx-press:active { transform: scale(.97); }
+}
 </style>
 </head>
 <body>
 
-<div class="page-header">
+<div class="page-header fx-reveal">
   <a href="index.html" class="back-home">← Volver al inicio</a>
   <div class="header-eyebrow">Provalliance · Cuadro de Mando Comercial</div>
   <div class="header-row">
@@ -145,44 +159,45 @@ body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color
       Ejercicio 2026 · Margen por marca, cliente y artículo
     </div>
   </div>
+  <div class="fx-gold-rule"></div>
 </div>
 
 <div class="tabs-bar" id="tabsBar">
-  <button class="tab-btn active" data-bun="DIST">BUN Distribución</button>
-  <button class="tab-btn" data-bun="WHOLESALE">BUN Wholesale</button>
-  <button class="tab-btn" data-bun="BSTORES">BUN Beauty Stores</button>
-  <button class="tab-btn" data-bun="B2CECOMM">BUN B2C Ecomm</button>
+  <button class="tab-btn fx-press active" data-bun="DIST">BUN Distribución</button>
+  <button class="tab-btn fx-press" data-bun="WHOLESALE">BUN Wholesale</button>
+  <button class="tab-btn fx-press" data-bun="BSTORES">BUN Beauty Stores</button>
+  <button class="tab-btn fx-press" data-bun="B2CECOMM">BUN B2C Ecomm</button>
 </div>
 
 <div class="main">
 
-  <div class="method-note" id="methodNote">
+  <div class="method-note fx-reveal" id="methodNote">
   </div>
 
   <div class="kpis">
-    <div class="kpi-card">
+    <div class="kpi-card fx-reveal">
       <div class="kpi-label">Venta Neta</div>
       <div class="kpi-value" id="kpi-venta">—</div>
       <div class="kpi-sub" id="kpi-venta-sub">—</div>
     </div>
-    <div class="kpi-card cost">
+    <div class="kpi-card cost fx-reveal">
       <div class="kpi-label">Coste</div>
       <div class="kpi-value" id="kpi-coste">—</div>
       <div class="kpi-sub" id="kpi-coste-sub">—</div>
     </div>
-    <div class="kpi-card margin">
+    <div class="kpi-card margin fx-reveal">
       <div class="kpi-label">Margen Bruto</div>
       <div class="kpi-value" id="kpi-margen">—</div>
       <div class="kpi-sub" id="kpi-margen-pct">—</div>
     </div>
-    <div class="kpi-card count">
+    <div class="kpi-card count fx-reveal">
       <div class="kpi-label" id="kpi-count-label">Clientes</div>
       <div class="kpi-value" id="kpi-clientes">—</div>
       <div class="kpi-sub" id="kpi-facturas">—</div>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card fx-reveal">
     <div class="table-header">
       <div class="table-title" id="tableTitle">Margen por marca <span style="text-transform:none;letter-spacing:0;color:var(--text-muted)" id="bunLabel"></span></div>
       <input type="text" class="search-input" id="searchInput" placeholder="Buscar…">
@@ -225,6 +240,32 @@ const FOOT_NOTES = {
 const fmtE = v => v==null ? '—' : (v<0?'−':'') + Math.abs(v).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
 const fmtPct = v => v==null ? 's/d' : v.toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1}) + '%';
 
+// ---- FX helpers: entrance reveal, counters, bar draw-in ----
+function fxRevealAll(root){
+  (root||document).querySelectorAll('.fx-reveal:not(.fx-in)').forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('fx-in'), i*70);
+  });
+}
+function fxCounter(el, target, fmt, dur){
+  dur = dur || 1000;
+  if(target==null){ el.textContent = fmt(target); return; }
+  let startT = null;
+  function step(ts){
+    if(!startT) startT = ts;
+    const p = Math.min(1, (ts-startT)/dur);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = fmt(target*eased);
+    if(p<1) requestAnimationFrame(step); else el.textContent = fmt(target);
+  }
+  requestAnimationFrame(step);
+}
+function fxAnimateBars(root){
+  const bars = (root||document).querySelectorAll('.margin-bar-fill[data-w]');
+  requestAnimationFrame(()=>{
+    bars.forEach(b=>{ b.style.width = b.dataset.w + '%'; });
+  });
+}
+
 let currentBun = 'DIST';
 let sortKey = 'venta';
 let sortDir = -1;
@@ -240,9 +281,9 @@ function clientMetrics(c){
 
 function renderKpis(){
   const d = DATA[currentBun];
-  document.getElementById('kpi-venta').textContent = fmtE(d.kpi.venta);
-  document.getElementById('kpi-coste').textContent = fmtE(d.kpi.coste);
-  document.getElementById('kpi-margen').textContent = fmtE(d.kpi.margen);
+  fxCounter(document.getElementById('kpi-venta'), d.kpi.venta, fmtE);
+  fxCounter(document.getElementById('kpi-coste'), d.kpi.coste, fmtE);
+  fxCounter(document.getElementById('kpi-margen'), d.kpi.margen, fmtE);
 
   if(d.mode === 'marca'){
     document.getElementById('kpi-venta-sub').textContent = '= fichero de márgenes';
@@ -254,14 +295,14 @@ function renderKpis(){
     const pctBase = d.kpi.ventaConocida || d.kpi.venta;
     document.getElementById('kpi-margen-pct').textContent = fmtPct(pctBase ? d.kpi.margen/pctBase*100 : 0) + (d.kpi.ventaSinDato > 0 ? ' sobre venta con coste conocido' : ' sobre venta');
     document.getElementById('kpi-count-label').textContent = 'Marcas';
-    document.getElementById('kpi-clientes').textContent = d.kpi.marcas.toLocaleString('es-ES');
+    fxCounter(document.getElementById('kpi-clientes'), d.kpi.marcas, v=>Math.round(v).toLocaleString('es-ES'));
     document.getElementById('kpi-facturas').textContent = d.kpi.clientes.toLocaleString('es-ES') + ' clientes';
   } else {
     document.getElementById('kpi-venta-sub').textContent = '= Informe de Facturación';
     document.getElementById('kpi-coste-sub').textContent = 'Importe de coste (Precio de Coste)';
     document.getElementById('kpi-margen-pct').textContent = fmtPct(d.kpi.venta ? d.kpi.margen/d.kpi.venta*100 : 0) + ' sobre venta';
     document.getElementById('kpi-count-label').textContent = 'Clientes';
-    document.getElementById('kpi-clientes').textContent = d.kpi.clientes.toLocaleString('es-ES');
+    fxCounter(document.getElementById('kpi-clientes'), d.kpi.clientes, v=>Math.round(v).toLocaleString('es-ES'));
     document.getElementById('kpi-facturas').textContent = d.kpi.facturas.toLocaleString('es-ES') + ' facturas';
   }
 
@@ -276,6 +317,7 @@ function renderKpis(){
 function renderTable(){
   const d = DATA[currentBun];
   if(d.mode === 'marca'){ renderMarcaTable(d); } else { renderClienteTable(d); }
+  fxAnimateBars(document.getElementById('cliTbody'));
 }
 
 /* ---------------- MODE: marca -> cliente -> articulo (DIST, WHOLESALE) ---------------- */
@@ -352,7 +394,7 @@ function renderMarcaTable(d){
           </tr>`;
         }).join('');
         return `<div class="cliente-row${cOpen?' open':''}" data-key="${cKey}">
-            <div class="cliente-row-head" onclick="toggleMarcaCliente('${cKey.replace(/'/g,"\\'")}')">
+            <div class="cliente-row-head fx-press" onclick="toggleMarcaCliente('${cKey.replace(/'/g,"\\'")}')">
               <span class="cli-toggle-icon">▶</span>
               <span class="cliente-name">${c.n}</span>
               <span class="num-cell">${fmtE(c.v)}</span>
@@ -374,7 +416,7 @@ function renderMarcaTable(d){
     return `<tr class="cli-row${open?' open':''}" data-key="${key}">
         <td></td>
         <td>
-          <div class="cli-name" onclick="toggleMarca('${key.replace(/'/g,"\\'")}')">
+          <div class="cli-name fx-press" onclick="toggleMarca('${key.replace(/'/g,"\\'")}')">
             <span class="cli-toggle-icon">▶</span><span class="marca-chip">${m.n}</span>
           </div>
         </td>
@@ -383,7 +425,7 @@ function renderMarcaTable(d){
         <td class="num-cell">${m.mg==null ? '<span class="no-data" title="Sin precio de coste en el fichero origen">—</span>' : fmtE(m.mg)}</td>
         <td class="num-cell">
           <div class="margin-bar-wrap">
-            <div class="margin-bar-track"><div class="margin-bar-fill${(m.pct||0)<0?' neg':''}" style="width:${barPct}%"></div></div>
+            <div class="margin-bar-track"><div class="margin-bar-fill${(m.pct||0)<0?' neg':''}" style="width:0%" data-w="${barPct}"></div></div>
             ${fmtPct(m.pct)}
           </div>
         </td>
@@ -468,7 +510,7 @@ function renderClienteTable(d){
         <td class="r">${fmtE(margen)}</td>
         <td class="r">
           <div class="margin-bar-wrap">
-            <div class="margin-bar-track"><div class="margin-bar-fill${pct<0?' neg':''}" style="width:${bar}%"></div></div>
+            <div class="margin-bar-track"><div class="margin-bar-fill${pct<0?' neg':''}" style="width:0%" data-w="${bar}"></div></div>
             ${fmtPct(pct)}
           </div>
         </td>
@@ -478,7 +520,7 @@ function renderClienteTable(d){
     return `<tr class="cli-row${open?' open':''}" data-key="${key}">
         <td></td>
         <td>
-          <div class="cli-name" onclick="toggleClient('${key.replace(/'/g,"\\'")}')">
+          <div class="cli-name fx-press" onclick="toggleClient('${key.replace(/'/g,"\\'")}')">
             <span class="cli-toggle-icon">▶</span>${c.n}
           </div>
         </td>
@@ -487,7 +529,7 @@ function renderClienteTable(d){
         <td class="num-cell">${fmtE(c.margen)}</td>
         <td class="num-cell">
           <div class="margin-bar-wrap">
-            <div class="margin-bar-track"><div class="margin-bar-fill${c.pct<0?' neg':''}" style="width:${barPct}%"></div></div>
+            <div class="margin-bar-track"><div class="margin-bar-fill${c.pct<0?' neg':''}" style="width:0%" data-w="${barPct}"></div></div>
             ${fmtPct(c.pct)}
           </div>
         </td>
@@ -533,7 +575,9 @@ document.querySelectorAll('.cli-table th[data-sort]').forEach(th=>{
   th.addEventListener('click', ()=>{
     const key = th.dataset.sort;
     if(sortKey===key){ sortDir *= -1; } else { sortKey = key; sortDir = key==='n' ? 1 : -1; }
-    renderTable();
+    const tbody = document.getElementById('cliTbody');
+    tbody.classList.add('fx-fading');
+    setTimeout(()=>{ renderTable(); tbody.classList.remove('fx-fading'); }, 150);
   });
 });
 
@@ -550,11 +594,13 @@ document.querySelectorAll('#tabsBar .tab-btn').forEach(btn=>{
     sortKey = 'venta'; sortDir = -1;
     renderKpis();
     renderTable();
+    fxRevealAll();
   });
 });
 
 renderKpis();
 renderTable();
+fxRevealAll();
 
 </script>
 
