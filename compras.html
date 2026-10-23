@@ -197,6 +197,23 @@ function fmtEur(v){
 function fmtNum(v){return new Intl.NumberFormat('es-ES').format(Math.round(v));}
 function fmtPct(v,t){return t?((v/t)*100).toFixed(1)+'%':'--';}
 
+// ---- article code prefix -> marca (same mapping used to build BRAND_TOTAL) ----
+const PREFIX_BRAND={RED:'REDKEN',LOP:'LOREAL',KER:'KERASTASE',ALF:'ALFAPARF',GOL:'GOLDWELL',WPR:'WELLA',LDI:'LADIOSA',DAV:'DAVINES',CLO:'CHICLOVE',RST:'REF',REF:'REF',TAH:'TAHE',SCH:'SCHWARZKOP',SAL:'SALERM',OLA:'OLAPLEX',TER:'TERMIX',MAS:'MASGLO',GHD:'GHD',LPR:'LIVINGPRO',KCO:'KINCOSMET',JLD:'JLD',PRO:'JLD',BKT:'BKT',HEL:'HELLER',MCA:'MAXSUM',COT:'COTRIL',INN:'INNOVATIS',MOR:'MOROCCANOI',ACO:'ALCANTARA',AMI:'AMIKA',LEN:'LENDAM',KMA:'KMAX',BMA:'BMAG',SUE:'SHUUEMURA',THU:'THUYA',NPR:'NIOXIN',WAH:'WAHL',VOL:'VOLTAGE',PMA:'PHILIPMAR',REV:'REVLON',CRO:'CROBIN',REC:'REMEMBER',POL:'POLLIE',FPR:'FRANCK PROVOST',REG:'REGINCOS',BRO:'BROAER',EOL:'EOLUX',EPR:'EPRES',TAS:'EPRES',PAR:'Barber Line',BLI:'Barber Line',BAR:'BARDOT',BAB:'BABYLISS',GOD:'BABYLISS',CAL:'BABYLISS'};
+function brandOfCode(code){ const m=/^([A-Za-z]+)/.exec(code); return (m&&PREFIX_BRAND[m[1]])||'OTHER'; }
+
+function computeSupplierBrands(sup, mes){
+  const agg={};
+  sup.peds.forEach(p=>{
+    if(mes!==0 && p.mes!==mes) return;
+    (LINES[p.id]||[]).forEach(l=>{
+      const b=brandOfCode(l[0]);
+      if(!agg[b]) agg[b]={n:b,gasto:0,up:0,ur:0,uf:0};
+      agg[b].gasto+=l[6]; agg[b].up+=l[2]; agg[b].ur+=l[3]; agg[b].uf+=l[4];
+    });
+  });
+  return Object.values(agg).sort((a,b)=>b.gasto-a.gasto);
+}
+
 // ---- FX helpers: entrance reveal, counters, observe-once ----
 function fxRevealAll(root){
   (root||document).querySelectorAll('.fx-reveal:not(.fx-in)').forEach((el,i)=>{
@@ -215,6 +232,10 @@ function fxCounter(el, target, fmtFn, dur){
     if(p<1) requestAnimationFrame(step); else el.textContent = fmtFn(target);
   }
   requestAnimationFrame(step);
+}
+function fxAnimateBars(root){
+  const bars = (root||document).querySelectorAll('[data-fxw]');
+  requestAnimationFrame(()=>{ bars.forEach(b=>{ b.style.width = b.dataset.fxw; }); });
 }
 function fxObserveOnce(el, cb){
   if(!el || !('IntersectionObserver' in window)){ cb(); return; }
@@ -309,10 +330,12 @@ function renderRanking(mes,mode,query){
   document.getElementById('rank-title').textContent=`Ranking detallado (${sorted.length})`;
   const maxG=sorted[0]?.[1]||1;
   const tbody=document.getElementById('rank-body');
+  const clickable = mode==='proveedor';
   tbody.innerHTML=sorted.map(([k,v],i)=>{
     const pct=(v/total*100).toFixed(1);
     const bw=Math.round(v/maxG*120);
-    return `<tr><td style="color:var(--t3)">${i+1}</td><td><strong>${k}</strong></td><td class="num">${fmtEur(v)}</td><td class="num" style="color:var(--t3)">${pct}%</td><td><div class="bar-wrap"><div class="bar" style="width:${bw}px"></div></div></td></tr>`;
+    const rowAttrs = clickable ? ` class="fx-press" style="cursor:pointer" onclick="openModal('${k.replace(/'/g,"\\'")}')" title="Ver detalle de ${k}"` : '';
+    return `<tr${rowAttrs}><td style="color:var(--t3)">${i+1}</td><td><strong>${k}</strong></td><td class="num">${fmtEur(v)}</td><td class="num" style="color:var(--t3)">${pct}%</td><td><div class="bar-wrap"><div class="bar" style="width:${bw}px"></div></div></td></tr>`;
   }).join('');
 }
 
@@ -348,9 +371,27 @@ function openModal(supName){
   if(selMes!==0) peds=peds.filter(p=>p.mes===selMes);
   peds.sort((a,b)=>b.g-a.g);
   const body=document.getElementById('modal-body');
-  if(!peds.length){body.innerHTML='<p style="color:var(--t3);font-size:13px">Sin pedidos en el período seleccionado.</p>';}
+
+  const supBrands=computeSupplierBrands(sup, selMes);
+  const maxBg=Math.max(1,...supBrands.map(b=>b.gasto));
+  const brandsHtml = supBrands.length ? `<div class="pan" style="margin-bottom:14px">
+    <div class="pt">Marcas de este proveedor${selMes!==0?' · '+ (MONTH_NAMES[selMes]||selMes):''}</div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;font-size:11px;color:var(--t3)">Marca</th><th class="num" style="font-size:11px;color:var(--t3)">Gasto</th><th class="num" style="font-size:11px;color:var(--t3)">Ud. Rec.</th></tr></thead>
+      <tbody>${supBrands.map(b=>`<tr>
+        <td style="padding:4px 0"><div style="display:flex;align-items:center;gap:8px">
+          <div style="height:4px;border-radius:2px;background:var(--teal,#1D9E75);width:0px" data-fxw="${Math.round(b.gasto/maxBg*80)}px"></div>
+          <span style="font-size:12px">${b.n}</span>
+        </div></td>
+        <td class="num" style="font-size:12px">${fmtEur(b.gasto)}</td>
+        <td class="num" style="font-size:12px">${fmtNum(b.ur)}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>` : '';
+
+  if(!peds.length){body.innerHTML=brandsHtml+'<p style="color:var(--t3);font-size:13px">Sin pedidos en el período seleccionado.</p>';}
   else{
-    body.innerHTML=peds.map(p=>{
+    body.innerHTML=brandsHtml+peds.map(p=>{
       const lines=LINES[p.id]||[];
       const totalAI=lines.length?(lines[0][7]||0):0;
       const lineRows=lines.map(l=>`<tr>
@@ -375,6 +416,7 @@ function openModal(supName){
       </div>`;
     }).join('');
   }
+  fxAnimateBars(body);
   document.getElementById('modal').classList.remove('hidden');
 }
 
