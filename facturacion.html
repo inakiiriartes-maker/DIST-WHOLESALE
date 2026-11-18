@@ -257,6 +257,7 @@ function mergeMonths(bun, monthsArr){
   const clientesSet = new Set();
   monthsArr.forEach(m=>{
     const data = AGG[bun][String(m)];
+    if(!data) return; // not every BUN has data for every month in the global MONTHS list
     netoSum += data.kpi.neto;
     udsSum  += data.kpi.uds;
     data.cli.forEach(c=>{
@@ -706,6 +707,7 @@ function exportExcel(bun, allData) {
   function getLinesForScope(mes, marca) {
     const data = AGG[bun][String(mes)];
     const rows = [];
+    if (!data) return rows; // not every BUN has data for every month in the global MONTHS list
     data.cli.forEach(cli => {
       cli.facs.forEach(fn => {
         const inv = INV[fn]; if (!inv) return;
@@ -736,7 +738,9 @@ function exportExcel(bun, allData) {
   const resumenRows = [['BUN','Mes','Importe Neto','Facturas','Clientes','Unidades']];
   if (allData) {
     [0, ...MONTHS].forEach(m => {
-      const kpi = AGG[bun][String(m)].kpi;
+      const bucket = AGG[bun][String(m)];
+      if (!bucket) return; // not every BUN has data for every month in the global MONTHS list
+      const kpi = bucket.kpi;
       if (!kpi.neto && !kpi.facturas) return;
       resumenRows.push([bunLabel, mesLabel(m), kpi.neto, kpi.facturas, kpi.clientes, kpi.uds]);
     });
@@ -753,7 +757,9 @@ function exportExcel(bun, allData) {
   const marcaRows = [['BUN','Mes','Marca','Importe Neto','Unidades']];
   if (allData) {
     MONTHS.forEach(m => {
-      AGG[bun][String(m)].marc.forEach(mr => {
+      const bucket = AGG[bun][String(m)];
+      if (!bucket) return; // not every BUN has data for every month in the global MONTHS list
+      bucket.marc.forEach(mr => {
         marcaRows.push([bunLabel, mesLabel(m), mr.n, mr.neto, mr.uds]);
       });
     });
@@ -772,7 +778,9 @@ function exportExcel(bun, allData) {
   const cliRows = [['BUN','Mes','Cliente','Importe Neto','Nº Facturas']];
   if (allData) {
     MONTHS.forEach(m => {
-      AGG[bun][String(m)].cli.forEach(c => {
+      const bucket = AGG[bun][String(m)];
+      if (!bucket) return; // not every BUN has data for every month in the global MONTHS list
+      bucket.cli.forEach(c => {
         cliRows.push([bunLabel, mesLabel(m), c.n, c.neto, c.facs.length]);
       });
     });
